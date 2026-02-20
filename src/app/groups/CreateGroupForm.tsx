@@ -3,17 +3,20 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createGroup } from '@/app/actions/group';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 export function CreateGroupForm() {
   const router = useRouter();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || isSubmitting) return;
 
+    setError(null);
     setIsSubmitting(true);
     try {
       const result = await createGroup(name, description);
@@ -21,7 +24,7 @@ export function CreateGroupForm() {
         router.push(`/groups/${result.groupId}`);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : '作成に失敗しました');
+      setError(err instanceof Error ? err.message : '作成に失敗しました');
     } finally {
       setIsSubmitting(false);
     }
@@ -30,6 +33,9 @@ export function CreateGroupForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <h2 className="font-bold text-stone-700">新規グループ作成</h2>
+      {error && (
+        <ErrorMessage message={error} onDismiss={() => setError(null)} />
+      )}
       <div>
         <label className="block text-sm font-bold text-stone-700 mb-2">グループ名</label>
         <input

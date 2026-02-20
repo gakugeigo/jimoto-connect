@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createGroupPost } from '@/app/actions/group';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 function formatRelativeTime(dateStr: string) {
   const d = new Date(dateStr);
@@ -23,6 +24,8 @@ export function GroupDetailClient({ group, posts, members, isAdmin }: any) {
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   const inviteUrl = typeof window !== 'undefined'
     ? `${window.location.origin}/groups/join/${group.invite_token}`
@@ -32,13 +35,14 @@ export function GroupDetailClient({ group, posts, members, isAdmin }: any) {
     e.preventDefault();
     if (!content.trim() || isSubmitting) return;
 
+    setError(null);
     setIsSubmitting(true);
     try {
       await createGroupPost(group.id, content);
       setContent('');
       router.refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '投稿に失敗しました');
+      setError(err instanceof Error ? err.message : '投稿に失敗しました');
     } finally {
       setIsSubmitting(false);
     }
@@ -46,11 +50,20 @@ export function GroupDetailClient({ group, posts, members, isAdmin }: any) {
 
   const copyInviteLink = () => {
     navigator.clipboard.writeText(inviteUrl);
-    alert('招待リンクをコピーしました');
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
   };
 
   return (
     <div className="space-y-6">
+      {error && (
+        <ErrorMessage message={error} onDismiss={() => setError(null)} />
+      )}
+      {copySuccess && (
+        <div className="px-4 py-3 rounded-xl bg-green-50 border border-green-200 text-green-800 text-sm">
+          招待リンクをコピーしました
+        </div>
+      )}
       <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm overflow-hidden">
         <div className="p-6">
           <h1 className="text-xl font-bold text-stone-800">{group.name}</h1>

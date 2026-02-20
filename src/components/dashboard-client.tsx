@@ -7,6 +7,7 @@ import { CreatePostModal } from '@/components/create-post-modal';
 import { toggleLike } from '@/app/actions/like';
 import { createComment } from '@/app/actions/comment';
 import { toggleHometownVisit } from '@/app/actions/profile';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 // --- Icons (SVG) ---
 const Icons = {
@@ -97,6 +98,7 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
   const [isLiking, setIsLiking] = useState<string | null>(null);
   const [isCommenting, setIsCommenting] = useState<string | null>(null);
   const [isTogglingVisit, setIsTogglingVisit] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const currentSchoolData = schools.find((s: any) => getSchoolId(s) === activeSchoolId) || schools[0];
   const school = currentSchoolData.schools;
@@ -120,15 +122,30 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
   const handleComment = async (postId: string) => {
     const content = commentInputs[postId]?.trim();
     if (!content || isCommenting) return;
+    setError(null);
     setIsCommenting(postId);
     try {
       await createComment(postId, content);
       setCommentInputs((prev) => ({ ...prev, [postId]: '' }));
       router.refresh();
     } catch (e) {
-      alert(e instanceof Error ? e.message : 'コメントに失敗しました');
+      setError(e instanceof Error ? e.message : 'コメントに失敗しました');
     } finally {
       setIsCommenting(null);
+    }
+  };
+
+  const handleVisitToggle = async () => {
+    if (isTogglingVisit) return;
+    setError(null);
+    setIsTogglingVisit(true);
+    try {
+      await toggleHometownVisit();
+      router.refresh();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '更新に失敗しました');
+    } finally {
+      setIsTogglingVisit(false);
     }
   };
 
@@ -189,18 +206,7 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
                        🏠 帰省中！
                      </div>
                      <button
-                       onClick={async () => {
-                         if (isTogglingVisit) return;
-                         setIsTogglingVisit(true);
-                         try {
-                           await toggleHometownVisit();
-                           router.refresh();
-                         } catch (e) {
-                           alert(e instanceof Error ? e.message : '更新に失敗しました');
-                         } finally {
-                           setIsTogglingVisit(false);
-                         }
-                       }}
+                       onClick={handleVisitToggle}
                        disabled={isTogglingVisit}
                        className="w-full px-3 py-2 text-sm font-bold text-stone-600 hover:bg-stone-100 transition border-t border-green-200"
                      >
@@ -209,18 +215,7 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
                    </>
                  ) : (
                    <button
-                     onClick={async () => {
-                       if (isTogglingVisit) return;
-                       setIsTogglingVisit(true);
-                       try {
-                         await toggleHometownVisit();
-                         router.refresh();
-                       } catch (e) {
-                         alert(e instanceof Error ? e.message : '更新に失敗しました');
-                       } finally {
-                         setIsTogglingVisit(false);
-                       }
-                     }}
+                     onClick={handleVisitToggle}
                      disabled={isTogglingVisit}
                      className="w-full flex flex-col items-center gap-0.5 py-3 px-3 text-sm font-bold text-stone-700 hover:bg-stone-100 transition"
                    >
@@ -274,8 +269,12 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
               <span className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold">同</span>
               <span className="font-bold text-stone-700">同窓会イベント</span>
             </a>
+            <a href="/map" className="flex items-center gap-3 p-4 hover:bg-stone-50 transition border-b border-[#E0E0E0]">
+              <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">地</span>
+              <span className="font-bold text-stone-700">居住地マップ</span>
+            </a>
             <a href="#" className="flex items-center gap-3 p-4 hover:bg-stone-50 transition border-b border-[#E0E0E0] last:border-0">
-              <span className="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center font-bold">地</span>
+              <span className="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center font-bold">新</span>
               <span className="font-bold text-stone-700">地元ニュース</span>
             </a>
           </nav>
@@ -284,6 +283,9 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
 
         {/* --- Center Column (Community Dashboard) --- */}
         <main className="lg:col-span-6 space-y-8">
+          {error && (
+            <ErrorMessage message={error} onDismiss={() => setError(null)} />
+          )}
           
           {/* Mobile: プロフィール概要・学校切り替え・帰省中 (サイドバー非表示時) */}
           <div className="lg:hidden space-y-3">
@@ -317,18 +319,7 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
                     🏠 帰省中！
                   </div>
                   <button
-                    onClick={async () => {
-                      if (isTogglingVisit) return;
-                      setIsTogglingVisit(true);
-                      try {
-                        await toggleHometownVisit();
-                        router.refresh();
-                      } catch (e) {
-                        alert(e instanceof Error ? e.message : '更新に失敗しました');
-                      } finally {
-                        setIsTogglingVisit(false);
-                      }
-                    }}
+                    onClick={handleVisitToggle}
                     disabled={isTogglingVisit}
                     className="w-full px-3 py-2 text-sm font-bold text-stone-600 hover:bg-stone-100 transition border-t border-green-200"
                   >
@@ -337,18 +328,7 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
                 </>
               ) : (
                 <button
-                  onClick={async () => {
-                    if (isTogglingVisit) return;
-                    setIsTogglingVisit(true);
-                    try {
-                      await toggleHometownVisit();
-                      router.refresh();
-                    } catch (e) {
-                      alert(e instanceof Error ? e.message : '更新に失敗しました');
-                    } finally {
-                      setIsTogglingVisit(false);
-                    }
-                  }}
+                  onClick={handleVisitToggle}
                   disabled={isTogglingVisit}
                   className="w-full flex flex-col items-center gap-0.5 py-3 px-3 text-sm font-bold text-stone-700 hover:bg-stone-100 transition"
                 >
@@ -357,6 +337,10 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
                 </button>
               )}
             </div>
+            <a href="/map" className="block p-3 bg-white rounded-xl border border-[#E0E0E0] hover:bg-stone-50 transition">
+              <span className="text-blue-600 font-bold">📍 居住地マップ</span>
+              <span className="text-xs text-stone-500 block mt-0.5">同級生がどこにいるか見る</span>
+            </a>
           </div>
 
           {/* 1. School Dashboard Card */}

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createEvent } from '@/app/actions/event';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 export function CreateEventForm({ schools }: { schools: any[] }) {
   const router = useRouter();
@@ -14,11 +15,13 @@ export function CreateEventForm({ schools }: { schools: any[] }) {
   const [schoolId, setSchoolId] = useState('');
   const [maxParticipants, setMaxParticipants] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim() || !eventDate || isSubmitting) return;
 
+    setError(null);
     setIsSubmitting(true);
     try {
       const result = await createEvent({
@@ -34,7 +37,7 @@ export function CreateEventForm({ schools }: { schools: any[] }) {
         router.push(`/events/${result.eventId}`);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : '作成に失敗しました');
+      setError(err instanceof Error ? err.message : '作成に失敗しました');
     } finally {
       setIsSubmitting(false);
     }
@@ -45,7 +48,9 @@ export function CreateEventForm({ schools }: { schools: any[] }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <h2 className="font-bold text-stone-700">新規イベント作成</h2>
-
+      {error && (
+        <ErrorMessage message={error} onDismiss={() => setError(null)} />
+      )}
       <div>
         <label className="block text-sm font-bold text-stone-700 mb-2">タイトル *</label>
         <input

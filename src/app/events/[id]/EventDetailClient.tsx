@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { joinEvent, leaveEvent, deleteEvent } from '@/app/actions/event';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 export function EventDetailClient({
   event,
@@ -20,6 +21,7 @@ export function EventDetailClient({
   const [isJoining, setIsJoining] = useState(false);
   const [isLeaving, setIsLeaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const school = event.schools;
   const organizer = event.profiles ?? {};
@@ -29,12 +31,13 @@ export function EventDetailClient({
 
   const handleJoin = async () => {
     if (isJoining || isAttending || isOrganizer || isFull) return;
+    setError(null);
     setIsJoining(true);
     try {
       await joinEvent(event.id);
       router.refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : '参加に失敗しました');
+      setError(err instanceof Error ? err.message : '参加に失敗しました');
     } finally {
       setIsJoining(false);
     }
@@ -43,12 +46,13 @@ export function EventDetailClient({
   const handleLeave = async () => {
     if (isLeaving || !isAttending || isOrganizer) return;
     if (!confirm('参加をキャンセルしますか？')) return;
+    setError(null);
     setIsLeaving(true);
     try {
       await leaveEvent(event.id);
       router.refresh();
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'キャンセルに失敗しました');
+      setError(err instanceof Error ? err.message : 'キャンセルに失敗しました');
     } finally {
       setIsLeaving(false);
     }
@@ -57,12 +61,13 @@ export function EventDetailClient({
   const handleDelete = async () => {
     if (!isOrganizer || isDeleting) return;
     if (!confirm('このイベントを削除しますか？参加者全員に影響します。')) return;
+    setError(null);
     setIsDeleting(true);
     try {
       await deleteEvent(event.id);
       router.push('/events');
     } catch (err) {
-      alert(err instanceof Error ? err.message : '削除に失敗しました');
+      setError(err instanceof Error ? err.message : '削除に失敗しました');
     } finally {
       setIsDeleting(false);
     }
@@ -70,6 +75,9 @@ export function EventDetailClient({
 
   return (
     <div className="space-y-6">
+      {error && (
+        <ErrorMessage message={error} onDismiss={() => setError(null)} />
+      )}
       <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm overflow-hidden">
         <div className="p-6">
           <h1 className="text-xl font-bold text-stone-800">{event.title}</h1>

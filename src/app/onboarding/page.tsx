@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { searchSchools, completeOnboarding } from '@/app/actions/onboarding';
+import { CLUB_OPTIONS, CLUB_OTHER_VALUE } from '@/lib/constants';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
+import { Spinner } from '@/components/ui/Spinner';
 
 // --- Icons ---
 const Icons = {
@@ -59,6 +62,7 @@ type SchoolFormState = {
   isNew: boolean;
   graduationYear: string;
   club: string;
+  clubOther: string;
   classRoom: string;
   otherClassRoom: string;
 };
@@ -67,6 +71,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [onboardingError, setOnboardingError] = useState<string | null>(null);
 
   // Basic Info
   const [basicInfo, setBasicInfo] = useState({
@@ -86,7 +91,8 @@ export default function OnboardingPage() {
     city: '',
     isNew: false,
     graduationYear: '2012',
-    club: '',
+    club: '帰宅部',
+    clubOther: '',
     classRoom: '1組',
     otherClassRoom: '',
   });
@@ -98,7 +104,8 @@ export default function OnboardingPage() {
     city: '',
     isNew: false,
     graduationYear: '2015',
-    club: '',
+    club: '帰宅部',
+    clubOther: '',
     classRoom: '1組',
     otherClassRoom: '',
   });
@@ -161,6 +168,9 @@ export default function OnboardingPage() {
         return state.classRoom;
       };
 
+      const getClubValue = (state: SchoolFormState) =>
+        state.club === CLUB_OTHER_VALUE ? state.clubOther.trim() : state.club;
+
       // 姓と名を結合して displayName にする
       const displayName = `${basicInfo.lastName} ${basicInfo.firstName}`;
 
@@ -175,7 +185,7 @@ export default function OnboardingPage() {
           prefecture: juniorHigh.prefecture,
           city: juniorHigh.city,
           graduationYear: parseInt(juniorHigh.graduationYear),
-          club: juniorHigh.club,
+          club: getClubValue(juniorHigh),
           classRoom: getFinalClassRoom(juniorHigh),
         } : undefined,
         highSchool: highSchool.name ? {
@@ -184,7 +194,7 @@ export default function OnboardingPage() {
           prefecture: highSchool.prefecture,
           city: highSchool.city,
           graduationYear: parseInt(highSchool.graduationYear),
-          club: highSchool.club,
+          club: getClubValue(highSchool),
           classRoom: getFinalClassRoom(highSchool),
         } : undefined,
       });
@@ -195,7 +205,7 @@ export default function OnboardingPage() {
     } catch (error) {
       console.error('Error:', error);
       const msg = error instanceof Error ? error.message : '登録に失敗しました';
-      alert(`登録に失敗しました。${msg}`);
+      setOnboardingError(`登録に失敗しました。${msg}`);
       setIsLoading(false);
     }
   };
@@ -323,6 +333,13 @@ export default function OnboardingPage() {
           {/* --- Step 2: School Info --- */}
           {step === 2 && (
             <div className="animate-fade-in">
+              {onboardingError && (
+                <ErrorMessage
+                  message={onboardingError}
+                  onDismiss={() => setOnboardingError(null)}
+                  className="mb-6"
+                />
+              )}
               <div className="text-center mb-8">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600">
                   <Icons.School />
@@ -409,7 +426,24 @@ export default function OnboardingPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-stone-500 mb-1">部活</label>
-                        <input type="text" placeholder="例: 野球部" value={juniorHigh.club} onChange={(e) => setJuniorHigh({...juniorHigh, club: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+                        <select
+                          value={juniorHigh.club}
+                          onChange={(e) => setJuniorHigh({...juniorHigh, club: e.target.value})}
+                          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm"
+                        >
+                          {CLUB_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt === 'その他' ? CLUB_OTHER_VALUE : opt}>{opt}</option>
+                          ))}
+                        </select>
+                        {juniorHigh.club === CLUB_OTHER_VALUE && (
+                          <input
+                            type="text"
+                            placeholder="部活名を入力"
+                            value={juniorHigh.clubOther}
+                            onChange={(e) => setJuniorHigh({...juniorHigh, clubOther: e.target.value})}
+                            className="w-full px-3 py-2 mt-2 rounded-lg border border-stone-200 text-sm"
+                          />
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-stone-500 mb-1">3年時のクラス</label>
@@ -510,7 +544,24 @@ export default function OnboardingPage() {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-stone-500 mb-1">部活</label>
-                        <input type="text" placeholder="例: 野球部" value={highSchool.club} onChange={(e) => setHighSchool({...highSchool, club: e.target.value})} className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm" />
+                        <select
+                          value={highSchool.club}
+                          onChange={(e) => setHighSchool({...highSchool, club: e.target.value})}
+                          className="w-full px-3 py-2 rounded-lg border border-stone-200 text-sm"
+                        >
+                          {CLUB_OPTIONS.map((opt) => (
+                            <option key={opt} value={opt === 'その他' ? CLUB_OTHER_VALUE : opt}>{opt}</option>
+                          ))}
+                        </select>
+                        {highSchool.club === CLUB_OTHER_VALUE && (
+                          <input
+                            type="text"
+                            placeholder="部活名を入力"
+                            value={highSchool.clubOther}
+                            onChange={(e) => setHighSchool({...highSchool, clubOther: e.target.value})}
+                            className="w-full px-3 py-2 mt-2 rounded-lg border border-stone-200 text-sm"
+                          />
+                        )}
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-stone-500 mb-1">3年時のクラス</label>
@@ -547,8 +598,17 @@ export default function OnboardingPage() {
                     disabled={(!juniorHigh.name && !highSchool.name) || isLoading}
                     className="flex-[2] bg-orange-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
-                    {isLoading ? '登録中...' : 'はじめる'}
-                    {!isLoading && <Icons.Check />}
+                    {isLoading ? (
+                      <>
+                        <Spinner className="w-5 h-5" />
+                        登録中...
+                      </>
+                    ) : (
+                      <>
+                        はじめる
+                        <Icons.Check />
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

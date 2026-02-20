@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createPost } from '@/app/actions/post';
+import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 // --- Icons ---
 const Icons = {
@@ -24,6 +25,7 @@ export function CreatePostModal({ isOpen, onClose, schoolId, schoolName }: Props
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -39,6 +41,7 @@ export function CreatePostModal({ isOpen, onClose, schoolId, schoolName }: Props
   const handleSubmit = async () => {
     if (!content && !image) return;
 
+    setError(null);
     setIsSubmitting(true);
     try {
       const formData = new FormData();
@@ -54,11 +57,12 @@ export function CreatePostModal({ isOpen, onClose, schoolId, schoolName }: Props
       setContent('');
       setImage(null);
       setPreviewUrl(null);
+      setError(null);
       onClose();
       router.refresh();
-    } catch (error) {
-      console.error('Failed to post:', error);
-      alert('投稿に失敗しました。');
+    } catch (err) {
+      console.error('Failed to post:', err);
+      setError('投稿に失敗しました。');
     } finally {
       setIsSubmitting(false);
     }
@@ -80,6 +84,9 @@ export function CreatePostModal({ isOpen, onClose, schoolId, schoolName }: Props
 
         {/* Body */}
         <div className="p-6">
+          {error && (
+            <ErrorMessage message={error} onDismiss={() => setError(null)} className="mb-4" />
+          )}
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
