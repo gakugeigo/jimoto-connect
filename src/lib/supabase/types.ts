@@ -23,6 +23,11 @@ export interface Database {
           current_prefecture: string
           current_city: string
           current_station: string | null
+          maiden_name: string | null
+          is_hometown_visit: boolean | null
+          hometown_visit_until: string | null
+          industry: string | null
+          occupation: string | null
           created_at: string
           updated_at: string
         }
@@ -39,6 +44,11 @@ export interface Database {
           current_prefecture: string
           current_city: string
           current_station?: string | null
+          maiden_name?: string | null
+          is_hometown_visit?: boolean | null
+          hometown_visit_until?: string | null
+          industry?: string | null
+          occupation?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -55,6 +65,11 @@ export interface Database {
           current_prefecture?: string
           current_city?: string
           current_station?: string | null
+          maiden_name?: string | null
+          is_hometown_visit?: boolean | null
+          hometown_visit_until?: string | null
+          industry?: string | null
+          occupation?: string | null
           created_at?: string
           updated_at?: string
         }
