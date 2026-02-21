@@ -29,7 +29,7 @@ export default async function EventsPage() {
       max_participants,
       created_at,
       schools (id, name, type),
-      profiles!organizer_id (id, display_name, clerk_user_id)
+      profiles!organizer_id (id, display_name, clerk_user_id, avatar_url)
     `)
     .gte('event_date', new Date().toISOString().slice(0, 10))
     .order('event_date', { ascending: true })
@@ -44,28 +44,28 @@ export default async function EventsPage() {
   const attendingIds = new Set((myAttendances ?? []).map((a: { event_id: string }) => a.event_id));
 
   return (
-    <div className="min-h-screen bg-[#F5F5F0] text-[#333] font-sans">
-      <header className="sticky top-0 z-50 bg-white border-b border-[#E0E0E0] shadow-sm h-16 flex items-center justify-between px-6">
+    <div className="min-h-screen bg-[#FDF8F5] text-stone-800">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-stone-200/60 shadow-lg shadow-stone-200/20 h-16 flex items-center justify-between px-6">
         <div className="flex items-center gap-2">
-          <Link href="/dashboard" className="bg-orange-600 text-white p-1.5 rounded-lg font-bold text-xl">JC</Link>
+          <Link href="/dashboard" className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-2 rounded-xl font-bold text-xl shadow-lg shadow-orange-200/40">JC</Link>
           <span className="font-bold text-lg text-stone-700">同窓会イベント</span>
         </div>
         <div className="flex items-center gap-4">
           <Link
             href="/events/new"
-            className="px-4 py-2 bg-orange-600 text-white text-sm font-bold rounded-xl hover:bg-orange-700 transition"
+            className="px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold rounded-xl hover:from-orange-600 hover:to-orange-700 transition shadow-lg shadow-orange-200/40"
           >
             イベントを作成
           </Link>
-          <Link href="/dashboard" className="text-sm font-medium text-stone-600 hover:text-orange-600 transition-colors">
+          <Link href="/dashboard" className="text-sm font-semibold text-stone-600 hover:text-orange-600 transition-colors">
             ダッシュボードに戻る
           </Link>
         </div>
       </header>
 
       <div className="max-w-2xl mx-auto p-6">
-        <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-[#E0E0E0]">
+        <div className="bg-white/90 backdrop-blur rounded-2xl border border-stone-200/60 shadow-xl shadow-stone-200/40 overflow-hidden">
+          <div className="p-6 border-b border-stone-100">
             <h1 className="text-xl font-bold text-stone-800 mb-2">同窓会イベント</h1>
             <p className="text-sm text-stone-500">
               学校や地域の仲間とオフラインで会えるイベントを探したり、自分で企画したりできます。
@@ -78,7 +78,7 @@ export default async function EventsPage() {
                 <p className="text-stone-500 mb-4">開催予定のイベントはまだありません。</p>
                 <Link
                   href="/events/new"
-                  className="inline-block px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 transition"
+                  className="inline-block px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl hover:from-orange-600 hover:to-orange-700 transition shadow-lg shadow-orange-200/40"
                 >
                   最初のイベントを作成
                 </Link>
@@ -92,7 +92,7 @@ export default async function EventsPage() {
                   <Link
                     key={event.id}
                     href={`/events/${event.id}`}
-                    className="block p-6 hover:bg-stone-50 transition"
+                    className="block p-6 hover:bg-orange-50/50 transition"
                   >
                     <div className="flex justify-between items-start gap-4">
                       <div>

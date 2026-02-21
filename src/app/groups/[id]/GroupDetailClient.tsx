@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createGroupPost } from '@/app/actions/group';
+import { getAvatarUrl } from '@/lib/avatar';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 function formatRelativeTime(dateStr: string) {
@@ -64,7 +65,7 @@ export function GroupDetailClient({ group, posts, members, isAdmin }: any) {
           招待リンクをコピーしました
         </div>
       )}
-      <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm overflow-hidden">
+      <div className="bg-white/90 backdrop-blur rounded-2xl border border-stone-200/60 shadow-xl shadow-stone-200/40 overflow-hidden">
         <div className="p-6">
           <h1 className="text-xl font-bold text-stone-800">{group.name}</h1>
           {group.description && <p className="text-stone-500 text-sm mt-1">{group.description}</p>}
@@ -103,7 +104,7 @@ export function GroupDetailClient({ group, posts, members, isAdmin }: any) {
             {members.map((m: any) => (
               <div key={m.profiles?.id} className="flex items-center gap-2 bg-stone-50 px-3 py-1.5 rounded-full">
                 <div className="w-6 h-6 rounded-full bg-stone-200 overflow-hidden">
-                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${m.profiles?.clerk_user_id ?? m.profiles?.id}`} alt="" />
+                  <img src={getAvatarUrl(m.profiles ?? {})} alt="" />
                 </div>
                 <span className="text-sm font-bold text-stone-700">{m.profiles?.display_name ?? '?'}</span>
               </div>
@@ -112,7 +113,7 @@ export function GroupDetailClient({ group, posts, members, isAdmin }: any) {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm overflow-hidden">
+      <div className="bg-white/90 backdrop-blur rounded-2xl border border-stone-200/60 shadow-xl shadow-stone-200/40 overflow-hidden">
         <div className="p-6">
           <h2 className="font-bold text-stone-700 mb-4">グループの投稿</h2>
 
@@ -143,7 +144,7 @@ export function GroupDetailClient({ group, posts, members, isAdmin }: any) {
                   <div key={post.id} className="border-b border-stone-100 pb-4 last:border-0">
                     <div className="flex gap-3">
                       <div className="w-10 h-10 rounded-full bg-stone-200 overflow-hidden flex-shrink-0">
-                        <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${author.clerk_user_id ?? post.id}`} alt="" />
+                        <img src={getAvatarUrl(author)} alt="" />
                       </div>
                       <div>
                         <p className="font-bold text-stone-800">{author.display_name ?? '匿名'}</p>

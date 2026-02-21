@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getAvatarUrl } from '@/lib/avatar';
 import { useRouter } from 'next/navigation';
 import { UserButton } from '@clerk/nextjs';
 import { CreatePostModal } from '@/components/create-post-modal';
@@ -89,10 +90,39 @@ function formatRelativeTime(dateStr: string) {
   return d.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
 }
 
-export function DashboardClient({ profile, schools, posts = [], likesMap = {}, commentsMap = {} }: any) {
+type Theme = 'default' | 'v2';
+
+export function DashboardClient({
+  profile,
+  schools,
+  posts = [],
+  likesMap = {},
+  commentsMap = {},
+  theme = 'default',
+  basePath = '',
+}: {
+  profile: any;
+  schools: any[];
+  posts?: any[];
+  likesMap?: Record<string, { count: number; isLiked: boolean }>;
+  commentsMap?: Record<string, any[]>;
+  theme?: Theme;
+  basePath?: string;
+}) {
+  const isV2 = theme === 'v2';
+  const dashPath = basePath ? `${basePath}/dashboard` : '/dashboard';
+  // v2 の profile/search 等は未実装のため、メインのパスへリンク
+  const profilePath = '/profile';
+  const searchPath = '/search';
+  const messagesPath = '/messages';
+  const groupsPath = '/groups';
+  const eventsPath = '/events';
+  const mapPath = '/map';
+  const residentsPath = '/residents';
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeSchoolId, setActiveSchoolId] = useState(getSchoolId(schools[0]));
+  const [activeTab, setActiveTab] = useState<'all' | 'classmates' | 'club'>('all');
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [isLiking, setIsLiking] = useState<string | null>(null);
@@ -106,7 +136,18 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
   const graduationYear = currentSchoolData.graduation_year;
   const classRoom = currentSchoolData.class_room || 'クラス不明';
 
-  const filteredPosts = posts.filter((p: any) => p.school_id === activeSchoolId);
+  // 学校切り替え時にタブを全体にリセット
+  useEffect(() => {
+    setActiveTab('all');
+  }, [activeSchoolId]);
+
+  // タブに応じて投稿をフィルタ（board_type で絞り込み）
+  const schoolFiltered = posts.filter((p: any) => p.school_id === activeSchoolId);
+  const filteredPosts = schoolFiltered.filter((p: any) => {
+    const bt = p.board_type ?? 'all';
+    // board_type 未設定の投稿は全体タブにのみ表示（後方互換）
+    return bt === activeTab;
+  });
 
   const handleLike = async (postId: string) => {
     if (isLiking) return;
@@ -149,26 +190,34 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
     }
   };
 
+  const homeLabel = profile.home_prefecture || profile.current_prefecture || '地元';
+
   return (
-    <div className="min-h-screen bg-[#F5F5F0] text-[#333] font-sans">
+    <div className={`min-h-screen bg-[#FDF8F5] ${isV2 ? 'text-[#3d2c1a]' : 'text-stone-800'}`}>
       
       {/* --- Header --- */}
-      <header className="sticky top-0 z-50 bg-white border-b border-[#E0E0E0] shadow-sm h-16 flex items-center justify-between px-6">
-        <div className="flex items-center gap-2">
-          <div className="bg-orange-600 text-white p-1.5 rounded-lg font-bold text-xl">JC</div>
-          <span className="font-bold text-lg text-stone-700">Jimoto-Connect</span>
-        </div>
+      <header className={`sticky top-0 z-50 backdrop-blur-md shadow-sm h-16 flex items-center justify-between px-6 ${
+        isV2 ? 'bg-[#FDF8F5]/95 border-b border-[#e8d5c4]' : 'bg-white/95 border-b border-stone-200/80'
+      }`}>
         <div className="flex items-center gap-3">
-           <a href="/profile" className="flex items-center gap-2 text-sm font-bold text-stone-600 hover:text-orange-600 transition">
-             <span className="hidden sm:inline">{profile.display_name}</span>
-             <span className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center sm:hidden" title="プロフィール">
+          <a href={dashPath} className="flex items-center gap-2.5 group">
+            <div className={`px-2.5 py-1.5 rounded-xl font-bold text-lg transition-shadow ${
+              isV2 ? 'bg-[#8b6f47] text-[#FDF8F5] border border-[#6b5344] shadow-sm' : 'bg-gradient-to-br from-orange-500 to-orange-600 text-white shadow-md shadow-orange-200/50 group-hover:shadow-orange-300/60'
+            }`}>JC</div>
+            <span className={`font-bold text-lg tracking-tight hidden sm:inline ${isV2 ? 'text-[#3d2c1a]' : 'text-stone-800'}`}>Jimoto-Connect</span>
+          </a>
+        </div>
+        <div className="flex items-center gap-4">
+           <a href={profilePath} className={`flex items-center gap-2 text-sm font-semibold transition-colors ${isV2 ? 'text-[#5c4a3a] hover:text-[#8b6f47]' : 'text-stone-600 hover:text-orange-600'}`}>
+             <span className="hidden sm:inline max-w-[120px] truncate">{profile.display_name}</span>
+             <span className="w-9 h-9 rounded-full bg-stone-100 flex items-center justify-center sm:hidden ring-2 ring-stone-200/50" title="プロフィール">
                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
              </span>
            </a>
            <UserButton
-             afterSignOutUrl="/"
+             afterSignOutUrl={basePath ? `/v2` : '/'}
              appearance={{
-               elements: { avatarBox: 'w-9 h-9' }
+               elements: { avatarBox: 'w-9 h-9 ring-2 ring-stone-200/50' }
              }}
            />
         </div>
@@ -178,12 +227,13 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
         
         {/* --- Left Sidebar (Profile Summary & School Switcher) --- */}
         <aside className="hidden lg:block lg:col-span-3 space-y-6">
-          <div className="bg-white rounded-xl border border-[#E0E0E0] p-6 shadow-sm">
+          <div className="bg-white/80 backdrop-blur rounded-2xl border border-stone-200/60 p-6 shadow-lg shadow-stone-200/30">
              <div className="text-center mb-4">
-               <div className="w-20 h-20 mx-auto bg-stone-100 rounded-full mb-3 overflow-hidden border-2 border-white shadow-sm">
-                 <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.display_name}`} alt="User" />
-               </div>
-               <h2 className="font-bold text-lg">{profile.display_name}</h2>
+               <a href={profilePath} className="block w-20 h-20 mx-auto rounded-2xl mb-3 overflow-hidden ring-2 ring-stone-200/60 shadow-md hover:ring-orange-300 transition-all">
+                 <img src={getAvatarUrl(profile)} alt="User" className="w-full h-full object-cover" />
+               </a>
+               <a href={profilePath} className={`text-xs font-bold ${isV2 ? 'text-[#8b6f47] hover:text-[#6b5344]' : 'text-orange-600 hover:text-orange-700'}`}>プロフィールを編集</a>
+               <h2 className="font-bold text-lg text-stone-800">{profile.display_name}</h2>
                {profile.maiden_name && <p className="text-xs text-stone-500">(旧姓: {profile.maiden_name})</p>}
                <p className="text-sm text-stone-500 mt-1">@{profile.clerk_user_id.slice(0, 8)}</p>
              </div>
@@ -251,31 +301,41 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
              </div>
           </div>
 
-          <nav className="bg-white rounded-xl border border-[#E0E0E0] overflow-hidden shadow-sm">
-            <div className="p-4 font-bold text-stone-400 text-xs border-b border-[#E0E0E0]">ショートカット</div>
-            <a href="/profile" className="flex items-center gap-3 p-4 hover:bg-stone-50 transition border-b border-[#E0E0E0]">
-              <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">P</span>
-              <span className="font-bold text-stone-700">プロフィール</span>
+          <nav className="bg-white/80 backdrop-blur rounded-2xl border border-stone-200/60 overflow-hidden shadow-lg shadow-stone-200/30">
+            <div className="p-4 font-bold text-stone-500 text-xs uppercase tracking-wider">ショートカット</div>
+            <a href={searchPath} className={`flex items-center gap-3 p-4 transition border-b border-stone-100 ${isV2 ? 'hover:bg-[#e8d5c4]/50' : 'hover:bg-orange-50/50'}`}>
+              <span className="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm">検</span>
+              <span className="font-semibold text-stone-700">同窓生検索</span>
             </a>
-            <a href="/search" className="flex items-center gap-3 p-4 hover:bg-stone-50 transition border-b border-[#E0E0E0]">
-              <span className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold">検</span>
-              <span className="font-bold text-stone-700">同窓生検索</span>
+            <a href={messagesPath} className={`flex items-center gap-3 p-4 transition border-b border-stone-100 ${isV2 ? 'hover:bg-[#e8d5c4]/50' : 'hover:bg-orange-50/50'}`}>
+              <span className="w-9 h-9 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center">
+                <Icons.MessageCircle />
+              </span>
+              <span className="font-semibold text-stone-700">メッセージ</span>
             </a>
-            <a href="/groups" className="flex items-center gap-3 p-4 hover:bg-stone-50 transition border-b border-[#E0E0E0]">
-              <span className="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">G</span>
-              <span className="font-bold text-stone-700">マイグループ</span>
+            <a href={mapPath} className={`flex items-center gap-3 p-4 transition border-b border-stone-100 ${isV2 ? 'hover:bg-[#e8d5c4]/50' : 'hover:bg-orange-50/50'}`}>
+              <span className="w-9 h-9 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">地</span>
+              <span className="font-semibold text-stone-700">居住地マップ</span>
             </a>
-            <a href="/events" className="flex items-center gap-3 p-4 hover:bg-stone-50 transition border-b border-[#E0E0E0] last:border-0">
-              <span className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center font-bold">同</span>
-              <span className="font-bold text-stone-700">同窓会イベント</span>
+            <a href={residentsPath} className={`flex items-center gap-3 p-4 transition border-b border-stone-100 ${isV2 ? 'hover:bg-[#e8d5c4]/50' : 'hover:bg-orange-50/50'}`}>
+              <span className="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-600 flex items-center justify-center font-bold text-sm">住</span>
+              <span className="font-semibold text-stone-700">居住地一覧</span>
             </a>
-            <a href="/map" className="flex items-center gap-3 p-4 hover:bg-stone-50 transition border-b border-[#E0E0E0]">
-              <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold">地</span>
-              <span className="font-bold text-stone-700">居住地マップ</span>
+            <a href={groupsPath} className={`flex items-center gap-3 p-4 transition border-b border-stone-100 ${isV2 ? 'hover:bg-[#e8d5c4]/50' : 'hover:bg-orange-50/50'}`}>
+              <span className="w-9 h-9 rounded-xl bg-violet-100 text-violet-600 flex items-center justify-center font-bold text-sm">G</span>
+              <span className="font-semibold text-stone-700">マイグループ</span>
             </a>
-            <a href="#" className="flex items-center gap-3 p-4 hover:bg-stone-50 transition border-b border-[#E0E0E0] last:border-0">
-              <span className="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center font-bold">新</span>
-              <span className="font-bold text-stone-700">地元ニュース</span>
+            <a href={eventsPath} className={`flex items-center gap-3 p-4 transition border-b border-stone-100 ${isV2 ? 'hover:bg-[#e8d5c4]/50' : 'hover:bg-orange-50/50'}`}>
+              <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm">同</span>
+              <span className="font-semibold text-stone-700">同窓会イベント</span>
+            </a>
+            <a href={profilePath} className={`flex items-center gap-3 p-4 transition border-b border-stone-100 ${isV2 ? 'hover:bg-[#e8d5c4]/50' : 'hover:bg-orange-50/50'}`}>
+              <span className="w-9 h-9 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">P</span>
+              <span className="font-semibold text-stone-700">プロフィール</span>
+            </a>
+            <a href="#" className="flex items-center gap-3 p-4 hover:bg-orange-50/50 transition last:border-0">
+              <span className="w-9 h-9 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-sm">新</span>
+              <span className="font-semibold text-stone-700">地元ニュース</span>
             </a>
           </nav>
         </aside>
@@ -290,17 +350,17 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
           {/* Mobile: プロフィール概要・学校切り替え・帰省中 (サイドバー非表示時) */}
           <div className="lg:hidden space-y-3">
             {(profile.industry || profile.occupation) && (
-              <div className="bg-white rounded-xl border border-[#E0E0E0] p-3 shadow-sm">
+              <div className="bg-white/80 backdrop-blur rounded-2xl border border-stone-200/60 p-4 shadow-lg shadow-stone-200/30">
                 <p className="text-xs font-bold text-stone-400 mb-1">自分のプロフィール</p>
                 <p className="text-sm font-bold text-stone-700">💼 {[profile.industry, profile.occupation].filter(Boolean).join(' ・ ')}</p>
               </div>
             )}
-            <div className="bg-white rounded-xl border border-[#E0E0E0] p-3 shadow-sm">
-              <p className="text-xs font-bold text-stone-400 mb-2">所属コミュニティ</p>
+            <div className="bg-white/80 backdrop-blur rounded-2xl border border-stone-200/60 p-4 shadow-lg shadow-stone-200/30">
+              <p className="text-xs font-bold text-stone-500 mb-2 uppercase tracking-wider">所属コミュニティ</p>
               <select
                 value={activeSchoolId ?? ''}
                 onChange={(e) => setActiveSchoolId(e.target.value)}
-                className="w-full p-3 rounded-lg border border-stone-200 bg-stone-50 font-bold text-stone-700 focus:ring-2 focus:ring-orange-200 focus:border-orange-300 outline-none"
+                className="w-full p-3 rounded-xl border border-stone-200/80 bg-white font-semibold text-stone-700 focus:ring-2 focus:ring-orange-200 focus:border-orange-400 outline-none transition"
               >
                 {schools.map((s: any) => {
                   const sid = getSchoolId(s);
@@ -312,7 +372,7 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
                 })}
               </select>
             </div>
-            <div className={`rounded-xl overflow-hidden ${profile.is_hometown_visit ? 'bg-green-50 ring-1 ring-green-200' : 'bg-stone-50'}`}>
+            <div className={`rounded-2xl overflow-hidden shadow-lg ${profile.is_hometown_visit ? 'bg-emerald-50/80 ring-2 ring-emerald-200/60' : 'bg-white/80 backdrop-blur border border-stone-200/60'}`}>
               {profile.is_hometown_visit ? (
                 <>
                   <div className="px-3 py-2 text-center text-sm font-bold text-green-700 bg-green-100">
@@ -337,16 +397,40 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
                 </button>
               )}
             </div>
-            <a href="/map" className="block p-3 bg-white rounded-xl border border-[#E0E0E0] hover:bg-stone-50 transition">
-              <span className="text-blue-600 font-bold">📍 居住地マップ</span>
-              <span className="text-xs text-stone-500 block mt-0.5">同級生がどこにいるか見る</span>
-            </a>
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-stone-500 uppercase tracking-wider">ショートカット</p>
+              <div className="grid grid-cols-2 gap-2">
+                <a href="/search" className={`flex flex-col items-start justify-center min-h-[52px] p-3 rounded-xl border border-stone-200/60 bg-white/80 backdrop-blur transition shadow-md ${isV2 ? 'hover:bg-[#e8d5c4]/30' : 'hover:bg-orange-50/50'}`}>
+                  <span className="text-sky-600 font-bold text-sm">🔍 同窓生検索</span>
+                </a>
+                <a href="/messages" className={`flex flex-col items-start justify-center min-h-[52px] p-3 rounded-xl border border-stone-200/60 bg-white/80 backdrop-blur transition shadow-md ${isV2 ? 'hover:bg-[#e8d5c4]/30' : 'hover:bg-orange-50/50'}`}>
+                  <span className="text-sky-600 font-bold text-sm">💬 メッセージ</span>
+                </a>
+                <a href={mapPath} className={`flex flex-col items-start justify-center min-h-[52px] p-3 rounded-xl border border-stone-200/60 bg-white/80 backdrop-blur transition shadow-md ${isV2 ? 'hover:bg-[#e8d5c4]/30' : 'hover:bg-orange-50/50'}`}>
+                  <span className="text-sky-600 font-bold text-sm">📍 居住地マップ</span>
+                </a>
+                <a href="/residents" className={`flex flex-col items-start justify-center min-h-[52px] p-3 rounded-xl border border-stone-200/60 bg-white/80 backdrop-blur transition shadow-md ${isV2 ? 'hover:bg-[#e8d5c4]/30' : 'hover:bg-orange-50/50'}`}>
+                  <span className="text-sky-600 font-bold text-sm">📋 居住地一覧</span>
+                </a>
+                <a href="/groups" className={`flex flex-col items-start justify-center min-h-[52px] p-3 rounded-xl border border-stone-200/60 bg-white/80 backdrop-blur transition shadow-md ${isV2 ? 'hover:bg-[#e8d5c4]/30' : 'hover:bg-orange-50/50'}`}>
+                  <span className="text-sky-600 font-bold text-sm">👥 マイグループ</span>
+                </a>
+                <a href="/events" className={`flex flex-col items-start justify-center min-h-[52px] p-3 rounded-xl border border-stone-200/60 bg-white/80 backdrop-blur transition shadow-md ${isV2 ? 'hover:bg-[#e8d5c4]/30' : 'hover:bg-orange-50/50'}`}>
+                  <span className="text-sky-600 font-bold text-sm">📅 同窓会イベント</span>
+                </a>
+                <a href="/profile" className={`flex flex-col items-start justify-center min-h-[52px] p-3 rounded-xl border border-stone-200/60 bg-white/80 backdrop-blur transition shadow-md col-span-2 ${isV2 ? 'hover:bg-[#e8d5c4]/30' : 'hover:bg-orange-50/50'}`}>
+                  <span className="text-sky-600 font-bold text-sm">👤 プロフィール</span>
+                </a>
+              </div>
+            </div>
           </div>
 
           {/* 1. School Dashboard Card */}
-          <section className="bg-white rounded-2xl border border-[#E0E0E0] overflow-hidden shadow-sm animate-fade-in">
-            <div className={`h-32 relative ${school?.type === 'high' ? 'bg-[#D97746]' : 'bg-[#2E6B52]'}`}>
-              <div className="absolute inset-0 bg-black/10"></div>
+          <section className={`bg-white/90 backdrop-blur rounded-2xl overflow-hidden shadow-xl animate-fade-in ${isV2 ? 'border border-[#e8d5c4] shadow-[#e8d5c4]/20' : 'border border-stone-200/60 shadow-stone-200/40'}`}>
+            <div className={`h-36 relative overflow-hidden ${
+              isV2 ? 'bg-gradient-to-br from-[#8b6f47] to-[#6b5344]' : school?.type === 'high' ? 'bg-gradient-to-br from-orange-500 to-orange-600' : 'bg-gradient-to-br from-emerald-600 to-teal-700'
+            }`}>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
               <div className="absolute bottom-4 left-6 text-white">
                 <div className="flex items-center gap-2 mb-1 opacity-90">
                   <Icons.School />
@@ -357,42 +441,89 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
             </div>
             
             <div className="p-6">
-              <div className="flex gap-4 mb-6 overflow-x-auto pb-2">
-                <button className={`flex-shrink-0 px-4 py-2 text-white rounded-full font-bold text-sm shadow-md ${school?.type === 'high' ? 'bg-[#D97746]' : 'bg-[#2E6B52]'}`}>
+              <div className="flex gap-3 mb-6 overflow-x-auto pb-2">
+                <button
+                  onClick={() => setActiveTab('all')}
+                  className={`flex-shrink-0 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition ${
+                    activeTab === 'all'
+                      ? isV2 ? 'bg-[#8b6f47] text-[#FDF8F5] border border-[#6b5344]' : school?.type === 'high' ? 'bg-orange-500 text-white shadow-orange-200/50' : 'bg-emerald-600 text-white shadow-emerald-200/50'
+                      : 'bg-white/90 border border-stone-200 text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
                   🏫 全体掲示板
                 </button>
-                <button className="flex-shrink-0 px-4 py-2 bg-white border border-[#E0E0E0] text-stone-600 rounded-full font-bold text-sm hover:bg-stone-50">
+                <button
+                  onClick={() => setActiveTab('classmates')}
+                  className={`flex-shrink-0 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition ${
+                    activeTab === 'classmates'
+                      ? isV2 ? 'bg-[#8b6f47] text-[#FDF8F5] border border-[#6b5344]' : school?.type === 'high' ? 'bg-orange-500 text-white shadow-orange-200/50' : 'bg-emerald-600 text-white shadow-emerald-200/50'
+                      : 'bg-white/90 border border-stone-200 text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
                   🎓 {graduationYear}年卒 (同級生)
                 </button>
-                <button className="flex-shrink-0 px-4 py-2 bg-white border border-[#E0E0E0] text-stone-600 rounded-full font-bold text-sm hover:bg-stone-50">
+                <button
+                  onClick={() => setActiveTab('club')}
+                  className={`flex-shrink-0 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm transition ${
+                    activeTab === 'club'
+                      ? isV2 ? 'bg-[#8b6f47] text-[#FDF8F5] border border-[#6b5344]' : school?.type === 'high' ? 'bg-orange-500 text-white shadow-orange-200/50' : 'bg-emerald-600 text-white shadow-emerald-200/50'
+                      : 'bg-white/90 border border-stone-200 text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
                   ⚾ {club}OB
                 </button>
               </div>
 
-              {/* Pinned / Important Info */}
-              <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6 flex gap-4 items-start">
-                <div className="bg-amber-100 text-amber-600 p-2 rounded-lg">
-                  <Icons.Calendar />
+              {/* 重要なお知らせ（全体タブのみ） */}
+              {activeTab === 'all' && (
+                <div className="bg-amber-50/80 border border-amber-200/60 rounded-2xl p-5 mb-6 flex gap-4 items-start shadow-sm">
+                  <div className="bg-amber-100/80 text-amber-700 p-2.5 rounded-xl shrink-0">
+                    <Icons.Calendar />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-amber-900 mb-1">【重要】{school?.name} 同窓会のお知らせ</h3>
+                    <p className="text-sm text-amber-800/90 leading-relaxed">
+                      現在、{profile.current_prefecture}エリアでの同窓会を企画中です。参加希望者はアンケートにご回答ください。
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-amber-900 mb-1">【重要】{school?.name} 同窓会のお知らせ</h3>
-                  <p className="text-sm text-amber-800 leading-relaxed">
-                    現在、{profile.current_prefecture}エリアでの同窓会を企画中です。参加希望者はアンケートにご回答ください。
-                  </p>
-                </div>
-              </div>
+              )}
 
               {/* Feed Items (Bulletin Board Style) */}
               <div className="space-y-4">
-                <h3 className="font-bold text-stone-700 flex items-center gap-2">
-                  <span className={`w-1.5 h-6 rounded-full ${school?.type === 'high' ? 'bg-orange-500' : 'bg-green-500'}`}></span>
-                  新着の書き込み
-                </h3>
+                <div className="flex items-center justify-between gap-4">
+                  <h3 className="font-bold text-stone-700 flex items-center gap-2">
+                    <span className={`w-1.5 h-6 rounded-full ${school?.type === 'high' ? 'bg-orange-500' : 'bg-emerald-500'}`}></span>
+                    {activeTab === 'all' ? '新着の書き込み' : activeTab === 'classmates' ? `${graduationYear}年卒 同級生の書き込み` : `${club}OBの書き込み`}
+                  </h3>
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className={`flex-shrink-0 px-4 py-2 rounded-xl font-bold text-sm shadow-sm transition ${
+                      isV2 ? 'bg-[#d4c4a8] hover:bg-[#c4b498] text-[#3d2c1a] border border-[#b8a088]' : school?.type === 'high' ? 'bg-orange-500 hover:bg-orange-600 text-white shadow-orange-200/50' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200/50'
+                    }`}
+                  >
+                    書き込む
+                  </button>
+                </div>
 
                 {filteredPosts.length === 0 ? (
                   <div className="py-12 text-center text-stone-500">
-                    <p className="font-bold mb-2">まだ書き込みがありません</p>
-                    <p className="text-sm">「書き込む」ボタンから最初の投稿をしてみましょう！</p>
+                    {activeTab === 'all' ? (
+                      <>
+                        <p className="font-bold mb-2">まだ書き込みがありません</p>
+                        <p className="text-sm">「書き込む」ボタンから最初の投稿をしてみましょう！</p>
+                      </>
+                    ) : activeTab === 'classmates' ? (
+                      <>
+                        <p className="font-bold mb-2">{graduationYear}年卒の同級生の書き込みはまだありません</p>
+                        <p className="text-sm">全体掲示板には投稿があるかもしれません</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-bold mb-2">{club}OBの書き込みはまだありません</p>
+                        <p className="text-sm">全体掲示板には投稿があるかもしれません</p>
+                      </>
+                    )}
                   </div>
                 ) : (
                   filteredPosts.map((post: any) => {
@@ -403,9 +534,9 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
                     const comments = commentsMap[post.id] ?? [];
                     const isExpanded = expandedPostId === post.id;
                     return (
-                      <div key={post.id} className="border-b border-[#E0E0E0] py-4 last:border-0">
+                      <div key={post.id} className="border-b border-stone-100 py-5 last:border-0">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded">{club}</span>
+                          <span className={`text-xs font-bold px-2.5 py-1 rounded-lg ${school?.type === 'high' ? 'bg-orange-100 text-orange-700' : 'bg-emerald-100 text-emerald-700'}`}>{club}</span>
                           <span className="text-stone-400 text-xs">{formatRelativeTime(post.created_at)}</span>
                         </div>
                         <p className="font-bold text-stone-800 mb-2 whitespace-pre-wrap">{post.content}</p>
@@ -414,7 +545,7 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
                         )}
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 rounded-full bg-stone-200 overflow-hidden">
-                            <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${authorSeed}`} alt="" />
+                            <img src={getAvatarUrl(author ?? {})} alt="" />
                           </div>
                           <span className="text-xs text-stone-500 font-bold">{authorName}</span>
                           <div className="ml-auto flex gap-4 text-stone-500 text-xs font-bold">
@@ -443,7 +574,7 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
                               return (
                                 <div key={c.id} className="flex gap-2 text-sm">
                                   <div className="w-6 h-6 rounded-full bg-stone-200 overflow-hidden flex-shrink-0">
-                                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${commentAuthor.clerk_user_id ?? c.id}`} alt="" />
+                                    <img src={getAvatarUrl(commentAuthor ?? { clerk_user_id: String(c.id) })} alt="" />
                                   </div>
                                   <div>
                                     <span className="font-bold text-stone-700">{commentAuthor.display_name ?? '匿名'}</span>
@@ -459,13 +590,13 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
                                 value={commentInputs[post.id] ?? ''}
                                 onChange={(e) => setCommentInputs((prev) => ({ ...prev, [post.id]: e.target.value }))}
                                 placeholder="コメントを入力..."
-                                className="flex-1 px-3 py-2 rounded-lg border border-stone-200 text-sm focus:ring-2 focus:ring-orange-200 focus:border-orange-300 outline-none"
+                                className={`flex-1 px-3 py-2 rounded-xl border border-stone-200 text-sm outline-none focus:ring-2 ${school?.type === 'high' ? 'focus:ring-orange-200 focus:border-orange-300' : 'focus:ring-emerald-200 focus:border-emerald-300'}`}
                                 onKeyDown={(e) => e.key === 'Enter' && handleComment(post.id)}
                               />
                               <button
                                 onClick={() => handleComment(post.id)}
                                 disabled={!commentInputs[post.id]?.trim() || !!isCommenting}
-                                className="px-4 py-2 bg-orange-600 text-white text-sm font-bold rounded-lg hover:bg-orange-700 disabled:opacity-50"
+                                className={`px-4 py-2 text-white text-sm font-bold rounded-xl disabled:opacity-50 ${school?.type === 'high' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                               >
                                 {isCommenting === post.id ? '送信中...' : '送信'}
                               </button>
@@ -481,27 +612,19 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
           </section>
 
           {/* 2. Club Room Card */}
-          <section className="bg-white rounded-2xl border border-[#E0E0E0] p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
-                  <Icons.Trophy />
-                </div>
-                <div>
-                  <h2 className="font-bold text-lg text-stone-800">{club} 部室</h2>
-                  <p className="text-xs text-stone-500">メンバー募集中</p>
-                </div>
+          <section className="bg-white/90 backdrop-blur rounded-2xl border border-stone-200/60 p-6 shadow-xl shadow-stone-200/40">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-sky-50 text-sky-600 rounded-xl">
+                <Icons.Trophy />
               </div>
-              <button 
-                onClick={() => setIsModalOpen(true)}
-                className="text-blue-600 font-bold text-sm bg-blue-50 px-4 py-2 rounded-full hover:bg-blue-100 transition"
-              >
-                書き込む
-              </button>
+              <div>
+                <h2 className="font-bold text-lg text-stone-800">{club} 部室</h2>
+                <p className="text-xs text-stone-500">メンバー募集中</p>
+              </div>
             </div>
             
             <div className="bg-stone-50 rounded-xl p-4 text-center">
-              <p className="text-stone-500 text-sm mb-3">最近の活動報告や、OB会の連絡はこちら</p>
+              <p className="text-stone-500 text-sm mb-3">部活OBタブで活動報告やOB会の連絡を共有できます</p>
               <div className="flex justify-center -space-x-2">
                 {[1,2,3].map(i => (
                   <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-stone-200 overflow-hidden">
@@ -520,9 +643,9 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
 
         {/* --- Right Sidebar (Local Info) --- */}
         <aside className="hidden lg:block lg:col-span-3 space-y-6">
-          <div className="bg-white rounded-xl border border-[#E0E0E0] p-5 shadow-sm">
+          <div className="bg-white/80 backdrop-blur rounded-2xl border border-stone-200/60 p-5 shadow-lg shadow-stone-200/30">
             <h3 className="font-bold text-stone-700 mb-4 flex items-center gap-2">
-              <span className="text-orange-500">📍</span> {profile.home_prefecture}の話題
+              <span className="text-orange-500">📍</span> {homeLabel}の話題
             </h3>
             <div className="space-y-4">
               <div className="flex gap-3 items-start">
@@ -546,6 +669,8 @@ export function DashboardClient({ profile, schools, posts = [], likesMap = {}, c
         onClose={() => setIsModalOpen(false)} 
         schoolId={school?.id ?? ''}
         schoolName={school?.name ?? ''}
+        schoolType={school?.type}
+        boardType={activeTab}
       />
 
     </div>

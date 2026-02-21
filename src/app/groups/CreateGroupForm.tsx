@@ -60,7 +60,7 @@ export function CreateGroupForm() {
       <button
         type="submit"
         disabled={!name.trim() || isSubmitting}
-        className="w-full py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 disabled:opacity-50 transition"
+        className="w-full py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 transition shadow-lg shadow-orange-200/40"
       >
         {isSubmitting ? '作成中...' : 'グループを作成'}
       </button>

@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 // 公開ルート (認証不要)
 const isPublicRoute = createRouteMatcher([
   '/', 
+  '/v2',           // v2 LP（デザイン候補2）
   '/sign-in(.*)', 
   '/sign-up(.*)',
   '/api/webhooks(.*)' // Clerk Webhook用
@@ -20,9 +21,12 @@ export default clerkMiddleware(async (auth, req) => {
     return redirectToSignIn();
   }
 
-  // 2. ログイン済みでトップページ(LP)にアクセスした場合 -> ダッシュボードへ
+  // 2. ログイン済みでLPにアクセスした場合 -> ダッシュボードへ
   if (userId && req.nextUrl.pathname === '/') {
     return NextResponse.redirect(new URL('/dashboard', req.url));
+  }
+  if (userId && req.nextUrl.pathname === '/v2') {
+    return NextResponse.redirect(new URL('/v2/dashboard', req.url));
   }
 
   // 3. (本来はここで「プロフィール未登録ならオンボーディングへ強制遷移」も入れたいが、

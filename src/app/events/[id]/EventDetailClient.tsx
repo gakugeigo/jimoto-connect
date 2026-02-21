@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { joinEvent, leaveEvent, deleteEvent } from '@/app/actions/event';
+import { getAvatarUrl } from '@/lib/avatar';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
 export function EventDetailClient({
@@ -78,7 +79,7 @@ export function EventDetailClient({
       {error && (
         <ErrorMessage message={error} onDismiss={() => setError(null)} />
       )}
-      <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm overflow-hidden">
+      <div className="bg-white/90 backdrop-blur rounded-2xl border border-stone-200/60 shadow-xl shadow-stone-200/40 overflow-hidden">
         <div className="p-6">
           <h1 className="text-xl font-bold text-stone-800">{event.title}</h1>
 
@@ -142,7 +143,7 @@ export function EventDetailClient({
                 <button
                   onClick={handleJoin}
                   disabled={isJoining || isFull}
-                  className="px-6 py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 disabled:opacity-50 transition"
+                  className="px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 transition shadow-lg shadow-orange-200/40"
                 >
                   {isJoining ? '参加中...' : isFull ? '定員に達しています' : '参加する'}
                 </button>
@@ -165,7 +166,7 @@ export function EventDetailClient({
       </div>
 
       {/* 参加者一覧 */}
-      <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm overflow-hidden">
+      <div className="bg-white/90 backdrop-blur rounded-2xl border border-stone-200/60 shadow-xl shadow-stone-200/40 overflow-hidden">
         <div className="p-6">
           <h2 className="font-bold text-stone-700 mb-4">
             参加者
@@ -187,10 +188,7 @@ export function EventDetailClient({
                   className="flex items-center gap-2 bg-stone-50 px-3 py-2 rounded-full hover:bg-orange-50 transition"
                 >
                   <div className="w-8 h-8 rounded-full bg-stone-200 overflow-hidden">
-                    <img
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${p.clerk_user_id ?? p.id}`}
-                      alt=""
-                    />
+                    <img src={getAvatarUrl(p)} alt="" className="w-full h-full object-cover" />
                   </div>
                   <span className="text-sm font-bold text-stone-700">{p.display_name ?? '?'}</span>
                 </Link>

@@ -6,7 +6,7 @@ import { auth } from '@clerk/nextjs/server';
 export type PrefectureCount = {
   prefecture: string;
   count: number;
-  users: { id: string; display_name: string; current_city: string; is_hometown_visit: boolean }[];
+  users: { id: string; display_name: string; avatar_url?: string | null; current_city: string; is_hometown_visit: boolean }[];
 };
 
 /** 同窓生の居住地を都道府県ごとに集計（自分の学校の同窓生のみ） */
@@ -40,6 +40,7 @@ export async function getAlumniByPrefecture(params?: {
     .select(`
       id,
       display_name,
+      avatar_url,
       current_prefecture,
       current_city,
       is_hometown_visit,
@@ -100,6 +101,7 @@ export async function getAlumniByPrefecture(params?: {
     entry.users.push({
       id: p.id,
       display_name: p.display_name || '',
+      avatar_url: p.avatar_url ?? null,
       current_city: p.current_city || '',
       is_hometown_visit: p.is_hometown_visit ?? false,
     });

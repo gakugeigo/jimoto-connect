@@ -218,7 +218,8 @@ export default function LandingPage() {
         <footer className="bg-white text-stone-400 py-12 border-t border-stone-100">
           <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="font-bold text-xl text-stone-800">Jimoto-Connect</div>
-            <div className="flex gap-6 text-sm">
+            <div className="flex flex-wrap gap-4 md:gap-6 text-sm items-center">
+              <a href="/v2" className="text-stone-500 hover:text-orange-600 transition">デザイン2（レトロ×モダン）を見る</a>
               <a href="#" className="hover:text-orange-600 transition">利用規約</a>
               <a href="#" className="hover:text-orange-600 transition">プライバシーポリシー</a>
               <a href="#" className="hover:text-orange-600 transition">お問い合わせ</a>

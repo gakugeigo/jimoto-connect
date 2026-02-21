@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { getAvatarUrl } from '@/lib/avatar';
 import { searchAlumni } from '@/app/actions/search';
 import Link from 'next/link';
-import { CLUB_OPTIONS, CLUB_OTHER_VALUE } from '@/lib/constants';
+import { CLUB_OPTIONS, CLUB_OTHER_VALUE, INDUSTRY_OPTIONS, INDUSTRY_OTHER_VALUE, OCCUPATION_OPTIONS, OCCUPATION_OTHER_VALUE } from '@/lib/constants';
 import { Spinner } from '@/components/ui/Spinner';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
@@ -19,6 +20,10 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
   const [graduationYear, setGraduationYear] = useState('');
   const [clubSelect, setClubSelect] = useState('');
   const [clubOther, setClubOther] = useState('');
+  const [industrySelect, setIndustrySelect] = useState('');
+  const [industryOther, setIndustryOther] = useState('');
+  const [occupationSelect, setOccupationSelect] = useState('');
+  const [occupationOther, setOccupationOther] = useState('');
   const [currentPrefecture, setCurrentPrefecture] = useState('');
   const [hometownVisitOnly, setHometownVisitOnly] = useState(false);
   const [results, setResults] = useState<any[]>([]);
@@ -28,7 +33,9 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
   const [sortBy, setSortBy] = useState<(typeof SORT_OPTIONS)[number]['value']>('hometown');
   const [page, setPage] = useState(1);
 
-  const years = Array.from({ length: 30 }, (_, i) => 2025 - i);
+  const years = Array.from({ length: 76 }, (_, i) => 2025 - i);
+
+  const clubRequiresSchool = clubSelect || clubOther.trim();
 
   const sortedResults = useMemo(() => {
     const arr = [...results];
@@ -54,16 +61,24 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
   const totalPages = Math.ceil(sortedResults.length / PAGE_SIZE) || 1;
 
   const handleSearch = async () => {
+    if (clubRequiresSchool && !schoolId) {
+      setError('部活で検索する場合は、学校を選択してください');
+      return;
+    }
     setIsSearching(true);
     setHasSearched(true);
     setError(null);
     setPage(1);
     try {
       const clubVal = clubSelect === CLUB_OTHER_VALUE ? clubOther.trim() : clubSelect;
+      const industryVal = industrySelect === INDUSTRY_OTHER_VALUE ? industryOther.trim() : industrySelect;
+      const occupationVal = occupationSelect === OCCUPATION_OTHER_VALUE ? occupationOther.trim() : occupationSelect;
       const data = await searchAlumni({
         schoolId: schoolId || undefined,
         graduationYear: graduationYear ? parseInt(graduationYear) : undefined,
         club: clubVal || undefined,
+        industry: industryVal || undefined,
+        occupation: occupationVal || undefined,
         currentPrefecture: currentPrefecture || undefined,
         hometownVisitOnly: hometownVisitOnly || undefined,
       });
@@ -84,7 +99,7 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
           <select
             value={schoolId}
             onChange={(e) => setSchoolId(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
+            className="w-full px-4 py-3 text-base rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
           >
             <option value="">指定しない</option>
             {schools.map((s) => (
@@ -100,7 +115,7 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
           <select
             value={graduationYear}
             onChange={(e) => setGraduationYear(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
+            className="w-full px-4 py-3 text-base rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
           >
             <option value="">指定しない</option>
             {years.map((y) => (
@@ -111,10 +126,11 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
 
         <div>
           <label className="block text-sm font-bold text-stone-700 mb-2">部活</label>
+          <p className="text-xs text-stone-500 mb-1">部活で検索する場合は、学校を選択してください</p>
           <select
             value={clubSelect}
             onChange={(e) => setClubSelect(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
+            className="w-full px-4 py-3 text-base rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
           >
             <option value="">指定しない</option>
             {CLUB_OPTIONS.map((opt) => (
@@ -127,7 +143,53 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
               value={clubOther}
               onChange={(e) => setClubOther(e.target.value)}
               placeholder="部活名を入力"
-              className="w-full px-4 py-3 mt-2 rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none"
+              className="w-full px-4 py-3 text-base mt-2 rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none"
+            />
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold text-stone-700 mb-2">業界</label>
+          <select
+            value={industrySelect}
+            onChange={(e) => setIndustrySelect(e.target.value)}
+            className="w-full px-4 py-3 text-base rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
+          >
+            <option value="">指定しない</option>
+            {INDUSTRY_OPTIONS.map((opt) => (
+              <option key={opt} value={opt === 'その他' ? INDUSTRY_OTHER_VALUE : opt}>{opt}</option>
+            ))}
+          </select>
+          {industrySelect === INDUSTRY_OTHER_VALUE && (
+            <input
+              type="text"
+              value={industryOther}
+              onChange={(e) => setIndustryOther(e.target.value)}
+              placeholder="業界を入力"
+              className="w-full px-4 py-3 text-base mt-2 rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none"
+            />
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-bold text-stone-700 mb-2">職種</label>
+          <select
+            value={occupationSelect}
+            onChange={(e) => setOccupationSelect(e.target.value)}
+            className="w-full px-4 py-3 text-base rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
+          >
+            <option value="">指定しない</option>
+            {OCCUPATION_OPTIONS.map((opt) => (
+              <option key={opt} value={opt === 'その他' ? OCCUPATION_OTHER_VALUE : opt}>{opt}</option>
+            ))}
+          </select>
+          {occupationSelect === OCCUPATION_OTHER_VALUE && (
+            <input
+              type="text"
+              value={occupationOther}
+              onChange={(e) => setOccupationOther(e.target.value)}
+              placeholder="職種を入力"
+              className="w-full px-4 py-3 text-base mt-2 rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none"
             />
           )}
         </div>
@@ -137,7 +199,7 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
           <select
             value={currentPrefecture}
             onChange={(e) => setCurrentPrefecture(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
+            className="w-full px-4 py-3 text-base rounded-xl border border-stone-200 focus:ring-2 focus:ring-orange-200 outline-none bg-white"
           >
             <option value="">指定しない</option>
             {prefectures.map((p) => (
@@ -167,7 +229,7 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
       <button
         onClick={handleSearch}
         disabled={isSearching}
-        className="w-full py-3 bg-orange-600 text-white font-bold rounded-xl hover:bg-orange-700 disabled:opacity-50 transition flex items-center justify-center gap-2"
+        className="w-full min-h-[48px] py-3.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 transition shadow-lg shadow-orange-200/40 flex items-center justify-center gap-2"
       >
         {isSearching ? (
           <>
@@ -218,11 +280,11 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
               <Link
                 key={p.id}
                 href={`/users/${p.id}`}
-                className="block p-4 bg-stone-50 rounded-xl hover:bg-orange-50 transition border border-stone-100"
+                className="block p-4 bg-white/80 rounded-2xl hover:bg-orange-50/80 transition border border-stone-200/60 shadow-sm hover:shadow-md"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-full bg-stone-200 overflow-hidden flex-shrink-0">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${p.display_name}`} alt="" />
+                    <img src={getAvatarUrl(p)} alt="" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -254,7 +316,7 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page <= 1}
-                className="px-3 py-1.5 rounded-lg border border-stone-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stone-50"
+                className="min-h-[44px] px-4 py-2 rounded-lg border border-stone-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stone-50"
               >
                 前へ
               </button>
@@ -264,7 +326,7 @@ export function SearchForm({ schools, prefectures }: { schools: any[]; prefectur
               <button
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={page >= totalPages}
-                className="px-3 py-1.5 rounded-lg border border-stone-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stone-50"
+                className="min-h-[44px] px-4 py-2 rounded-lg border border-stone-200 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-stone-50"
               >
                 次へ
               </button>

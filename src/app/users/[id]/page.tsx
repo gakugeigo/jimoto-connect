@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { auth } from '@clerk/nextjs/server';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
+import { getAvatarUrl } from '@/lib/avatar';
 
 export default async function UserProfilePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -15,6 +16,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
     .select(`
       id,
       display_name,
+      avatar_url,
       maiden_name,
       current_prefecture,
       current_city,
@@ -33,26 +35,44 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
 
   if (error || !profile) notFound();
 
+  const { data: me } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('clerk_user_id', userId)
+    .single();
+
+  const isOwnProfile = me?.id === profile.id;
+
   return (
-    <div className="min-h-screen bg-[#F5F5F0] text-[#333] font-sans">
-      <header className="sticky top-0 z-50 bg-white border-b border-[#E0E0E0] shadow-sm h-16 flex items-center justify-between px-6">
+    <div className="min-h-screen bg-[#FDF8F5] text-stone-800">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-stone-200/60 shadow-lg shadow-stone-200/20 h-16 flex items-center justify-between px-6">
         <div className="flex items-center gap-2">
-          <Link href="/dashboard" className="bg-orange-600 text-white p-1.5 rounded-lg font-bold text-xl">JC</Link>
+          <Link href="/dashboard" className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-2 rounded-xl font-bold text-xl shadow-lg shadow-orange-200/40">JC</Link>
           <span className="font-bold text-lg text-stone-700">Jimoto-Connect</span>
         </div>
-        <Link href="/search" className="text-sm font-medium text-stone-600 hover:text-orange-600 transition-colors">
-          ← 検索に戻る
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link href="/messages" className="text-sm font-semibold text-stone-600 hover:text-orange-600 transition-colors">
+            メッセージ
+          </Link>
+          {!isOwnProfile && (
+            <Link href={`/messages/${profile.id}`} className="px-4 py-2 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-200/40">
+              メッセージを送る
+            </Link>
+          )}
+          <Link href="/search" className="text-sm font-semibold text-stone-600 hover:text-orange-600 transition-colors">
+            ← 検索に戻る
+          </Link>
+        </div>
       </header>
 
       <div className="max-w-2xl mx-auto p-6">
-        <div className="bg-white rounded-2xl border border-[#E0E0E0] shadow-sm overflow-hidden">
-          <div className="p-6 border-b border-[#E0E0E0]">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-stone-100 overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
-                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.display_name}`} alt="" />
+        <div className="bg-white/90 backdrop-blur rounded-2xl border border-stone-200/60 shadow-xl shadow-stone-200/40 overflow-hidden">
+          <div className="p-6 sm:p-8 border-b border-stone-100">
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden ring-2 ring-stone-200/60 shadow-xl shadow-stone-200/40 flex-shrink-0">
+                <img src={getAvatarUrl(profile)} alt="" className="w-full h-full object-cover" />
               </div>
-              <div>
+              <div className="flex-1 text-center sm:text-left">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h1 className="text-xl font-bold text-stone-800">{profile.display_name}</h1>
                   {profile.is_hometown_visit && (
@@ -80,7 +100,7 @@ export default async function UserProfilePage({ params }: { params: Promise<{ id
             <h2 className="font-bold text-stone-700 mb-4">出身校・部活</h2>
             <div className="space-y-4">
               {(profile.profile_schools ?? []).map((ps: any) => (
-                <div key={ps.schools?.id} className="p-4 bg-stone-50 rounded-xl">
+                <div key={ps.schools?.id} className="p-4 bg-stone-50/80 rounded-2xl border border-stone-200/40">
                   <p className="font-bold text-stone-800">
                     {ps.schools?.type === 'high' ? '🏫' : '📚'} {ps.schools?.name}
                   </p>

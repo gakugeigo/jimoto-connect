@@ -13,10 +13,14 @@ export async function createPost(formData: FormData) {
 
   const content = formData.get('content') as string;
   const imageFile = formData.get('image') as File | null;
-  const schoolId = formData.get('schoolId') as string; // 投稿先の学校ID
+  const schoolId = (formData.get('schoolId') as string)?.trim() || '';
+  const boardType = (formData.get('boardType') as string) || 'all'; // 掲示板種別: all | classmates | club
 
   if (!content && !imageFile) {
     throw new Error('Content or image is required');
+  }
+  if (!schoolId) {
+    throw new Error('投稿先の学校を選択してください');
   }
 
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
@@ -63,18 +67,41 @@ export async function createPost(formData: FormData) {
 
   // 3. 投稿データの保存（contentは必須のため画像のみの場合はプレースホルダー）
   const postContent = content?.trim() || (imageUrl ? '(画像)' : '(投稿)');
-  const { error: postError } = await supabase
+  const boardTypeValue = ['all', 'classmates', 'club'].includes(boardType) ? boardType : 'all';
+
+  let { error: postError } = await supabase
     .from('posts')
     .insert({
       author_id: profile.id,
-      school_id: schoolId || null,
+      school_id: schoolId,
       content: postContent,
       image_url: imageUrl,
+      board_type: boardTypeValue,
     });
 
+  // board_type カラムが未作成の場合のフォールバック（マイグレーション未実行時）
   if (postError) {
-    console.error('Post creation error:', postError);
-    throw new Error('Failed to create post');
+    const msg = String(postError.message || '');
+    const isColumnError = /board_type|column|does not exist/i.test(msg);
+    if (isColumnError) {
+      const { error: fallbackError } = await supabase
+        .from('posts')
+        .insert({
+          author_id: profile.id,
+          school_id: schoolId,
+          content: postContent,
+          image_url: imageUrl,
+        });
+      if (!fallbackError) {
+        postError = null; // フォールバック成功
+      } else {
+        console.error('Post creation error (fallback):', fallbackError);
+      }
+    }
+    if (postError) {
+      console.error('Post creation error:', postError);
+      throw new Error('投稿に失敗しました。');
+    }
   }
 
   revalidatePath('/dashboard');

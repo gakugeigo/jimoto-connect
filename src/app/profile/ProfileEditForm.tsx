@@ -55,7 +55,8 @@ export function ProfileEditForm({
     setMessage(null);
     try {
       await updateProfileDetails(maidenNameVal, industryVal, occupationVal);
-      router.push('/dashboard');
+      setMessage('success');
+      router.refresh();
     } catch (err) {
       console.error(err);
       setMessage('error');

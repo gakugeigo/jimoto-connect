@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { jaJP } from "@clerk/localizations";
 import "./globals.css";
+import { MobileBottomNav } from "@/components/MobileBottomNav";
 
 export const metadata: Metadata = {
   title: "Jimoto-Connect",
@@ -39,8 +40,9 @@ export default function RootLayout({
       }}
     >
       <html lang="ja">
-        <body>
+        <body className="pb-20 lg:pb-0">
           {children}
+          <MobileBottomNav />
         </body>
       </html>
     </ClerkProvider>

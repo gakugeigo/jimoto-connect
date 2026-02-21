@@ -39,7 +39,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
   const { data: members } = await supabase
     .from('group_members')
     .select(`
-      profiles (id, display_name, clerk_user_id)
+      profiles (id, display_name, clerk_user_id, avatar_url)
     `)
     .eq('group_id', id);
 
@@ -50,20 +50,20 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
       content,
       image_url,
       created_at,
-      profiles!author_id (id, display_name, clerk_user_id)
+      profiles!author_id (id, display_name, clerk_user_id, avatar_url)
     `)
     .eq('group_id', id)
     .order('created_at', { ascending: false })
     .limit(50);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F0] text-[#333] font-sans">
-      <header className="sticky top-0 z-50 bg-white border-b border-[#E0E0E0] shadow-sm h-16 flex items-center justify-between px-6">
+    <div className="min-h-screen bg-[#FDF8F5] text-stone-800">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-stone-200/60 shadow-lg shadow-stone-200/20 h-16 flex items-center justify-between px-6">
         <div className="flex items-center gap-2">
-          <Link href="/groups" className="bg-orange-600 text-white p-1.5 rounded-lg font-bold text-xl">JC</Link>
+          <Link href="/groups" className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-2 rounded-xl font-bold text-xl shadow-lg shadow-orange-200/40">JC</Link>
           <span className="font-bold text-lg text-stone-700 truncate max-w-[200px]">{group.name}</span>
         </div>
-        <Link href="/groups" className="text-sm font-medium text-stone-600 hover:text-orange-600 transition-colors">
+        <Link href="/groups" className="text-sm font-semibold text-stone-600 hover:text-orange-600 transition-colors">
           ← グループ一覧
         </Link>
       </header>

@@ -1,9 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/service-role';
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
+import { unstable_noStore } from 'next/cache';
 import { DashboardClient } from '@/components/dashboard-client';
 
 export default async function DashboardPage() {
+  unstable_noStore(); // 投稿・コメント後に確実に再取得
   const { userId } = await auth();
   if (!userId) {
     redirect('/sign-in');
@@ -46,35 +49,40 @@ export default async function DashboardPage() {
     .map((ps: { school_id?: string; schools?: { id: string } }) => ps.school_id ?? ps.schools?.id)
     .filter(Boolean);
 
-  // 投稿を取得（学校掲示板用、著者情報付き）
+  // 投稿・いいね・コメントは service role で確実に取得
+  const serviceSupabase = createServiceRoleClient();
   let posts: any[] = [];
   if (schoolIds.length > 0) {
-    const { data: postsData } = await supabase
+    const selectCols = `id, content, image_url, school_id, created_at, profiles!author_id (id, display_name, clerk_user_id, avatar_url)`;
+    let { data: postsData, error: postsError } = await serviceSupabase
       .from('posts')
-      .select(`
-        id,
-        content,
-        image_url,
-        school_id,
-        created_at,
-        profiles!author_id (
-          id,
-          display_name,
-          clerk_user_id
-        )
-      `)
+      .select(selectCols + ', board_type')
       .in('school_id', schoolIds)
       .order('created_at', { ascending: false })
       .limit(50);
+
+    // board_type カラムが未作成の場合は board_type なしで再取得
+    if (postsError && /board_type|column/i.test(String(postsError.message))) {
+      const fallback = await serviceSupabase
+        .from('posts')
+        .select(selectCols)
+        .in('school_id', schoolIds)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      postsData = fallback.data;
+      postsError = fallback.error;
+    }
+    if (postsError) {
+      console.error('Posts fetch error:', postsError);
+    }
     posts = postsData ?? [];
   }
 
   const postIds = posts.map((p: any) => p.id);
 
-  // いいね一覧（投稿ごとの件数と、自分がいいねしたか）
   let likesMap: Record<string, { count: number; isLiked: boolean }> = {};
   if (postIds.length > 0) {
-    const { data: likesData } = await supabase
+    const { data: likesData } = await serviceSupabase
       .from('likes')
       .select('post_id, user_id')
       .in('post_id', postIds);
@@ -91,7 +99,7 @@ export default async function DashboardPage() {
   // コメント一覧（著者情報付き）
   let commentsMap: Record<string, any[]> = {};
   if (postIds.length > 0) {
-    const { data: commentsData } = await supabase
+    const { data: commentsData } = await serviceSupabase
       .from('comments')
       .select(`
         id,
@@ -100,7 +108,8 @@ export default async function DashboardPage() {
         created_at,
         profiles!user_id (
           display_name,
-          clerk_user_id
+          clerk_user_id,
+          avatar_url
         )
       `)
       .in('post_id', postIds)

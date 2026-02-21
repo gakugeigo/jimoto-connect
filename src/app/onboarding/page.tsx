@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { searchSchools, completeOnboarding } from '@/app/actions/onboarding';
 import { CLUB_OPTIONS, CLUB_OTHER_VALUE } from '@/lib/constants';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
@@ -69,6 +69,8 @@ type SchoolFormState = {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect_url') || '/dashboard';
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [onboardingError, setOnboardingError] = useState<string | null>(null);
@@ -199,7 +201,7 @@ export default function OnboardingPage() {
         } : undefined,
       });
       if (result?.success) {
-        router.push('/dashboard');
+        router.push(redirectUrl);
         return;
       }
     } catch (error) {
@@ -213,7 +215,7 @@ export default function OnboardingPage() {
   return (
     <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center p-4 font-sans text-stone-800">
       
-      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-orange-100 overflow-hidden">
+      <div className="w-full max-w-2xl bg-white/95 backdrop-blur rounded-3xl shadow-xl shadow-stone-200/40 border border-stone-200/60 overflow-hidden">
         
         {/* Progress Bar */}
         <div className="h-2 bg-stone-100 w-full">

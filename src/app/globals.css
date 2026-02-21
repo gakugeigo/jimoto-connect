@@ -1,1 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+html {
+  /* モバイル: 16px以上でiOSのフォームズームを防止 */
+  font-size: 16px;
+}
+
+body {
+  font-family: "Noto Sans JP", ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* ノッチ・ホームインジケーター用のセーフエリア */
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
