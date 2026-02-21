@@ -54,12 +54,16 @@ export default async function DashboardPage() {
   let posts: any[] = [];
   if (schoolIds.length > 0) {
     const selectCols = `id, content, image_url, school_id, created_at, profiles!author_id (id, display_name, clerk_user_id, avatar_url)`;
-    let { data: postsData, error: postsError } = await serviceSupabase
+    let postsData: any[] | null = null;
+    let postsError: Error | null = null;
+    const result = await serviceSupabase
       .from('posts')
       .select(selectCols + ', board_type')
       .in('school_id', schoolIds)
       .order('created_at', { ascending: false })
       .limit(50);
+    postsData = result.data;
+    postsError = result.error;
 
     // board_type カラムが未作成の場合は board_type なしで再取得
     if (postsError && /board_type|column/i.test(String(postsError.message))) {

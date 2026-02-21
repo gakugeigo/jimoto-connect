@@ -42,14 +42,16 @@ export default async function V2DashboardPage() {
   let posts: any[] = [];
   if (schoolIds.length > 0) {
     const selectCols = `id, content, image_url, school_id, created_at, profiles!author_id (id, display_name, clerk_user_id, avatar_url)`;
-    let { data: postsData, error: postsError } = await serviceSupabase
+    let postsData: any[] | null = null;
+    const result = await serviceSupabase
       .from('posts')
       .select(selectCols + ', board_type')
       .in('school_id', schoolIds)
       .order('created_at', { ascending: false })
       .limit(50);
+    postsData = result.data;
 
-    if (postsError && /board_type|column/i.test(String(postsError.message))) {
+    if (result.error && /board_type|column/i.test(String(result.error.message))) {
       const fallback = await serviceSupabase
         .from('posts')
         .select(selectCols)
