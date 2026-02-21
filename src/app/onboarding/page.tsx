@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { searchSchools, completeOnboarding } from '@/app/actions/onboarding';
 import { CLUB_OPTIONS, CLUB_OTHER_VALUE } from '@/lib/constants';
@@ -67,7 +67,7 @@ type SchoolFormState = {
   otherClassRoom: string;
 };
 
-export default function OnboardingPage() {
+function OnboardingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect_url') || '/v2/dashboard';
@@ -620,5 +620,17 @@ export default function OnboardingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OnboardingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FDF8F5] flex items-center justify-center">
+        <Spinner />
+      </div>
+    }>
+      <OnboardingContent />
+    </Suspense>
   );
 }
