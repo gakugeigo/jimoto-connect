@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useAuth } from '@clerk/nextjs';
 
 const navItems = [
-  { href: '/dashboard', label: 'ホーム', icon: '🏠' },
+  { href: '/v2/dashboard', label: 'ホーム', icon: '🏠' },
   { href: '/search', label: '検索', icon: '🔍' },
   { href: '/messages', label: 'メッセージ', icon: '💬' },
   { href: '/map', label: 'マップ', icon: '📍' },
@@ -13,7 +13,7 @@ const navItems = [
 ];
 
 function isActive(pathname: string, href: string) {
-  if (href === '/dashboard') return pathname === '/dashboard' || pathname === '/';
+  if (href === '/v2/dashboard') return pathname === '/dashboard' || pathname === '/' || pathname === '/v2/dashboard';
   if (href === '/messages') return pathname.startsWith('/messages');
   if (href === '/profile') return pathname.startsWith('/profile');
   return pathname.startsWith(href);
@@ -23,7 +23,7 @@ export function MobileBottomNav() {
   const pathname = usePathname();
   const { isSignedIn } = useAuth();
 
-  const showPaths = ['/dashboard', '/search', '/messages', '/map', '/profile', '/groups', '/events', '/residents', '/users'];
+  const showPaths = ['/dashboard', '/v2/dashboard', '/search', '/messages', '/map', '/profile', '/groups', '/events', '/residents', '/users'];
   const shouldShow = isSignedIn && (pathname === '/' || showPaths.some((p) => pathname.startsWith(p)));
 
   if (!shouldShow) return null;

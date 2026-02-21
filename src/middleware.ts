@@ -29,6 +29,10 @@ export default clerkMiddleware(async (auth, req) => {
   if (userId && (req.nextUrl.pathname === '/v2' || req.nextUrl.pathname === '/v1')) {
     return NextResponse.redirect(new URL('/v2/dashboard', req.url));
   }
+  // デザイン2をメインにしたため、/dashboard は /v2/dashboard へ
+  if (userId && req.nextUrl.pathname === '/dashboard') {
+    return NextResponse.redirect(new URL('/v2/dashboard', req.url));
+  }
 
   // 3. (本来はここで「プロフィール未登録ならオンボーディングへ強制遷移」も入れたいが、
   //     DBアクセスが必要になるため、ミドルウェアではなく各ページ(layout.tsx等)でやるのがNext.jsの定石)

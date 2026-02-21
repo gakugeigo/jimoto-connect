@@ -70,7 +70,7 @@ type SchoolFormState = {
 export default function OnboardingPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect_url') || '/dashboard';
+  const redirectUrl = searchParams.get('redirect_url') || '/v2/dashboard';
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [onboardingError, setOnboardingError] = useState<string | null>(null);
