@@ -2,6 +2,9 @@
 
 同窓生・同郷の仲間を見つけてつながる SNS アプリ。出身校・部活・居住地で検索し、オフライン交流を促すイベント機能も備えています。
 
+- **GitHub**: https://github.com/gakugeigo/jimoto-connect
+- **本番URL**: https://jimoto-connect.vercel.app/
+
 ## 技術スタック
 
 - **Frontend**: Next.js 16 (App Router) + TypeScript + Tailwind CSS
@@ -80,6 +83,11 @@ npm run dev
 - **同窓会イベント**: イベント作成・参加申し込み
 - **帰省中チェックイン**: 「今地元に帰省中」の登録・解除
 - **業界・職種**: プロフィールに業界・職種を登録（その他で自由入力可）
+
+## プレゼン資料
+
+- `docs/presentation/NOTEBOOK_LM_発表用ソース.md` - デモデイ発表用（Notebook LM ソース）
+- `docs/DEMO_DAY_提出物チェックリスト.md` - 提出物チェックリスト
 
 ## ドキュメント
 
