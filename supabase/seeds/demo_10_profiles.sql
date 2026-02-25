@@ -24,7 +24,7 @@ INSERT INTO public.profiles (
   industry, occupation, is_hometown_visit
 ) VALUES
   ('demo_seed_1', 'demo1@example.com', '山田 太郎', '神奈川県', '横浜市', '東京都', '渋谷区', 'IT・通信', 'エンジニア', false),
-  ('demo_seed_2', 'demo2@example.com', '佐藤 健一', '神奈川県', '横浜市', '東京都', '新宿区', '製造業', '営業', false),
+  ('demo_seed_2', 'demo2@example.com', '佐藤 健一', '神奈川県', '横浜市', '東京都', '新宿区', '製造業', '営業', true),
   ('demo_seed_3', 'demo3@example.com', '鈴木 大輔', '神奈川県', '横浜市', '千葉県', '千葉市', '金融・保険', '事務', false),
   ('demo_seed_4', 'demo4@example.com', '高橋 誠', '神奈川県', '横浜市', '東京都', '世田谷区', '建設・不動産', '設計', false),
   ('demo_seed_5', 'demo5@example.com', '伊藤 翔太', '神奈川県', '横浜市', '神奈川県', '横浜市', '小売・卸売', 'マーケティング', false),
@@ -94,13 +94,13 @@ INSERT INTO public.profiles (
   industry, occupation, is_hometown_visit
 ) VALUES
   ('demo_seed_11', 'demo11@example.com', '田中 一郎', '東京都', '小金井市', '東京都', '渋谷区', 'IT・通信', 'エンジニア', false),
-  ('demo_seed_12', 'demo12@example.com', '松本 聡', '千葉県', '船橋市', '東京都', '新宿区', '製造業', '営業', false),
+  ('demo_seed_12', 'demo12@example.com', '松本 聡', '千葉県', '船橋市', '東京都', '新宿区', '製造業', '営業', true),
   ('demo_seed_13', 'demo13@example.com', '井上 拓也', '埼玉県', 'さいたま市', '千葉県', '千葉市', '金融・保険', 'アナリスト', false),
   ('demo_seed_14', 'demo14@example.com', '木村 剛', '神奈川県', '横浜市', '東京都', '世田谷区', '建設・不動産', '設計', false),
   ('demo_seed_15', 'demo15@example.com', '林 健太', '東京都', '国分寺市', '神奈川県', '横浜市', '小売・卸売', 'マーケティング', false),
   ('demo_seed_16', 'demo16@example.com', '斎藤 裕也', '千葉県', '松戸市', '神奈川県', '川崎市', '公務', '教員', false),
   ('demo_seed_17', 'demo17@example.com', '山口 慎一', '埼玉県', '川口市', '埼玉県', 'さいたま市', '医療・福祉', '医師', false),
-  ('demo_seed_18', 'demo18@example.com', '森 達也', '神奈川県', '藤沢市', '東京都', '港区', 'IT・通信', 'コンサルタント', false),
+  ('demo_seed_18', 'demo18@example.com', '森 達也', '神奈川県', '藤沢市', '東京都', '港区', 'IT・通信', 'コンサルタント', true),
   ('demo_seed_19', 'demo19@example.com', '阿部 誠', '東京都', '八王子市', '埼玉県', '川口市', '教育', '塾講師', false),
   ('demo_seed_20', 'demo20@example.com', '石井 博之', '千葉県', '柏市', '千葉県', '船橋市', '運輸・物流', '営業', false)
 ON CONFLICT (clerk_user_id) DO NOTHING;

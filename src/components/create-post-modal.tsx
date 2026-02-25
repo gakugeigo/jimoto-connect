@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createPost } from '@/app/actions/post';
 import { ErrorMessage } from '@/components/ui/ErrorMessage';
 
@@ -19,9 +20,10 @@ type Props = {
   schoolName: string;
   schoolType?: 'high' | 'university';
   boardType: 'all' | 'classmates' | 'club'; // 投稿先の掲示板
+  suggestType?: 'event_consultation'; // イベント相談用のプレースホルダー・案内を表示
 };
 
-export function CreatePostModal({ isOpen, onClose, schoolId, schoolName, schoolType = 'high', boardType }: Props) {
+export function CreatePostModal({ isOpen, onClose, schoolId, schoolName, schoolType = 'high', boardType, suggestType }: Props) {
   const router = useRouter();
   const [content, setContent] = useState('');
   const [image, setImage] = useState<File | null>(null);
@@ -82,7 +84,8 @@ export function CreatePostModal({ isOpen, onClose, schoolId, schoolName, schoolT
         {/* Header */}
         <div className={`${headerGradient} p-4 flex justify-between items-center text-white`}>
           <h3 className="font-bold flex items-center gap-2">
-            <span>🏫</span> {schoolName} {boardType === 'all' ? '全体掲示板' : boardType === 'classmates' ? '同級生' : '部活OB'} へ投稿
+            <span>{suggestType === 'event_consultation' ? '📝' : '🏫'}</span>
+            {suggestType === 'event_consultation' ? 'イベント企画の相談' : `${schoolName} ${boardType === 'all' ? '全体掲示板' : boardType === 'classmates' ? '同級生' : '部活OB'} へ投稿`}
           </h3>
           <button onClick={onClose} className="p-1 hover:bg-white/20 rounded-full transition">
             <Icons.X />
@@ -97,10 +100,17 @@ export function CreatePostModal({ isOpen, onClose, schoolId, schoolName, schoolT
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="懐かしい思い出や、近況を書き込んでみよう..."
+            placeholder={suggestType === 'event_consultation' 
+              ? '例: 〇〇の同窓会やりたい！日程・場所どうする？コメントで議論してください' 
+              : '懐かしい思い出や、近況を書き込んでみよう...'}
             className="w-full h-32 text-lg placeholder-stone-400 outline-none resize-none rounded-xl border border-stone-200 p-3 focus:ring-2 focus:ring-orange-200 focus:border-orange-300"
             autoFocus
           />
+            {suggestType === 'event_consultation' && (
+            <p className="mt-3 text-sm text-amber-700 bg-amber-50 rounded-lg px-3 py-2 border border-amber-200/60">
+              💡 話がまとまったら → <Link href="/events/new" className="font-bold underline hover:text-amber-800" onClick={onClose}>イベントを作成</Link>
+            </p>
+          )}
 
           {/* Image Preview */}
           {previewUrl && (

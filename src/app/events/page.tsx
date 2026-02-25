@@ -47,18 +47,24 @@ export default async function EventsPage() {
     <div className="min-h-screen bg-[#FDF8F5] text-stone-800">
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-stone-200/60 shadow-lg shadow-stone-200/20 h-16 flex items-center justify-between px-6">
         <div className="flex items-center gap-2">
-          <Link href="/dashboard" className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-2 rounded-xl font-bold text-xl shadow-lg shadow-orange-200/40">JC</Link>
+          <Link href="/v2/dashboard" className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-2 rounded-xl font-bold text-xl shadow-lg shadow-orange-200/40">JC</Link>
           <span className="font-bold text-lg text-stone-700">同窓会イベント</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 flex-wrap">
+          <Link
+            href="/v2/dashboard?action=post"
+            className="px-4 py-2.5 bg-white border-2 border-orange-500 text-orange-600 text-sm font-bold rounded-xl hover:bg-orange-50 transition shadow-md"
+          >
+            📝 イベントの相談を始める
+          </Link>
           <Link
             href="/events/new"
             className="px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-sm font-bold rounded-xl hover:from-orange-600 hover:to-orange-700 transition shadow-lg shadow-orange-200/40"
           >
             イベントを作成
           </Link>
-          <Link href="/dashboard" className="text-sm font-semibold text-stone-600 hover:text-orange-600 transition-colors">
-            ダッシュボードに戻る
+          <Link href="/v2/dashboard" className="text-sm font-semibold text-stone-600 hover:text-orange-600 transition-colors">
+            ホームに戻る
           </Link>
         </div>
       </header>
@@ -76,12 +82,21 @@ export default async function EventsPage() {
             {(events ?? []).length === 0 ? (
               <div className="p-8 text-center">
                 <p className="text-stone-500 mb-4">開催予定のイベントはまだありません。</p>
-                <Link
-                  href="/events/new"
-                  className="inline-block px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl hover:from-orange-600 hover:to-orange-700 transition shadow-lg shadow-orange-200/40"
-                >
-                  最初のイベントを作成
-                </Link>
+                <p className="text-sm text-stone-500 mb-4">まずは掲示板で相談してから、話がまとまったらイベントを作成できます。</p>
+                <div className="flex flex-wrap gap-3 justify-center">
+                  <Link
+                    href="/v2/dashboard?action=post"
+                    className="inline-block px-6 py-3 bg-white border-2 border-orange-500 text-orange-600 font-bold rounded-xl hover:bg-orange-50 transition shadow-md"
+                  >
+                    📝 イベントの相談を始める
+                  </Link>
+                  <Link
+                    href="/events/new"
+                    className="inline-block px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-bold rounded-xl hover:from-orange-600 hover:to-orange-700 transition shadow-lg shadow-orange-200/40"
+                  >
+                    最初のイベントを作成
+                  </Link>
+                </div>
               </div>
             ) : (
               (events ?? []).map((event: any) => {

@@ -76,10 +76,10 @@ export default function LandingPage() {
                 </div>
 
                 <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1] mb-6 text-[#3d2c1a]">
-                  懐かしいあの頃の、
+                  中学校・高校の、
                   <br />
                   <span className="text-[#8b6f47] relative inline-block">
-                    同郷の仲間を見つける
+                    地元の仲間を見つける
                     <span className="absolute -bottom-1 left-0 w-full h-2 bg-[#d4c4a8]/50 -z-10 rounded" />
                   </span>
                 </h1>

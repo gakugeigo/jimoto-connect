@@ -48,11 +48,14 @@ SUPABASE_SERVICE_ROLE_KEY=eyJxxxxx
 Supabase ダッシュボードの **SQL Editor** で、以下のマイグレーションファイルを**順番に**実行してください。
 
 1. `supabase/migrations/20260216120000_create_initial_schema.sql`
-2. `supabase/migrations/20260216140000_add_maiden_name.sql`
-3. `supabase/migrations/20260216150000_create_storage_bucket.sql`
-4. `supabase/migrations/20260219120000_create_groups.sql`
-5. `supabase/migrations/20260219130000_add_profile_extended.sql`
-6. `supabase/migrations/20260220120000_create_events.sql`
+2. `supabase/migrations/20260216130000_add_class_room.sql`
+3. `supabase/migrations/20260216140000_add_maiden_name.sql`
+4. `supabase/migrations/20260216150000_create_storage_bucket.sql`
+5. `supabase/migrations/20260219120000_create_groups.sql`
+6. `supabase/migrations/20260219130000_add_profile_extended.sql`
+7. `supabase/migrations/20260220120000_create_events.sql`
+8. `supabase/migrations/20260220130000_add_board_type_to_posts.sql`
+9. `supabase/migrations/20260220140000_create_direct_messages.sql`（任意）
 
 **手順**: 各ファイルを開く → 全文コピー → SQL Editor に貼り付け → Run
 

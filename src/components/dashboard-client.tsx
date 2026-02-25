@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getAvatarUrl } from '@/lib/avatar';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { UserButton } from '@clerk/nextjs';
 import { CreatePostModal } from '@/components/create-post-modal';
 import { toggleLike } from '@/app/actions/like';
@@ -120,7 +120,9 @@ export function DashboardClient({
   const mapPath = '/map';
   const residentsPath = '/residents';
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [openForEventConsultation, setOpenForEventConsultation] = useState(false);
   const [activeSchoolId, setActiveSchoolId] = useState(getSchoolId(schools[0]));
   const [activeTab, setActiveTab] = useState<'all' | 'classmates' | 'club'>('all');
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
@@ -140,6 +142,15 @@ export function DashboardClient({
   useEffect(() => {
     setActiveTab('all');
   }, [activeSchoolId]);
+
+  // イベント相談用: ?action=post でホームに来た場合、投稿モーダルを自動で開く
+  useEffect(() => {
+    if (searchParams.get('action') === 'post') {
+      setIsModalOpen(true);
+      setOpenForEventConsultation(true);
+      router.replace(basePath ? '/v2/dashboard' : '/dashboard', { scroll: false });
+    }
+  }, [searchParams, router, basePath]);
 
   // タブに応じて投稿をフィルタ（board_type で絞り込み）
   const schoolFiltered = posts.filter((p: any) => p.school_id === activeSchoolId);
@@ -327,7 +338,10 @@ export function DashboardClient({
             </a>
             <a href={eventsPath} className={`flex items-center gap-3 p-4 transition border-b border-stone-100 ${isV2 ? 'hover:bg-[#e8d5c4]/50' : 'hover:bg-orange-50/50'}`}>
               <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-sm">同</span>
-              <span className="font-semibold text-stone-700">同窓会イベント</span>
+              <div>
+                <span className="font-semibold text-stone-700">同窓会イベント</span>
+                <p className="text-xs text-stone-500 mt-0.5">相談は掲示板の「書き込む」から</p>
+              </div>
             </a>
             <a href={profilePath} className={`flex items-center gap-3 p-4 transition border-b border-stone-100 ${isV2 ? 'hover:bg-[#e8d5c4]/50' : 'hover:bg-orange-50/50'}`}>
               <span className="w-9 h-9 rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-sm">P</span>
@@ -417,6 +431,7 @@ export function DashboardClient({
                 </a>
                 <a href="/events" className={`flex flex-col items-start justify-center min-h-[52px] p-3 rounded-xl border border-stone-200/60 bg-white/80 backdrop-blur transition shadow-md ${isV2 ? 'hover:bg-[#e8d5c4]/30' : 'hover:bg-orange-50/50'}`}>
                   <span className="text-sky-600 font-bold text-sm">📅 同窓会イベント</span>
+                  <span className="text-xs text-stone-500 mt-0.5">相談は書き込むから</span>
                 </a>
                 <a href="/profile" className={`flex flex-col items-start justify-center min-h-[52px] p-3 rounded-xl border border-stone-200/60 bg-white/80 backdrop-blur transition shadow-md col-span-2 ${isV2 ? 'hover:bg-[#e8d5c4]/30' : 'hover:bg-orange-50/50'}`}>
                   <span className="text-sky-600 font-bold text-sm">👤 プロフィール</span>
@@ -666,11 +681,12 @@ export function DashboardClient({
       {/* --- Modals --- */}
       <CreatePostModal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        onClose={() => { setIsModalOpen(false); setOpenForEventConsultation(false); }} 
         schoolId={school?.id ?? ''}
         schoolName={school?.name ?? ''}
         schoolType={school?.type}
         boardType={activeTab}
+        suggestType={openForEventConsultation ? 'event_consultation' : undefined}
       />
 
     </div>
