@@ -76,7 +76,7 @@ export default function LandingPage() {
                 </div>
 
                 <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1] mb-6 text-[#3d2c1a]">
-                  中学校・高校の、
+                  中学・高校の、
                   <br />
                   <span className="text-[#8b6f47] relative inline-block">
                     地元の仲間を見つける
@@ -85,7 +85,7 @@ export default function LandingPage() {
                 </h1>
 
                 <p className="text-lg text-[#5c4a3a] leading-relaxed mb-8 max-w-lg mx-auto lg:mx-0">
-                  Jimoto-Connectは、<strong>中学校・高校</strong>の同級生や部活の仲間を、
+                  Jimoto-Connectは、<strong>中学・高校</strong>の同級生や部活の仲間を、
                   今住んでいるエリアで見つけられるSNSです。
                   <br />
                   「近くにいる地元の友達や仲間」を今すぐ見つけよう。
