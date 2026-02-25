@@ -40,11 +40,38 @@ export async function createPost(formData: FormData) {
     throw new Error('Profile not found');
   }
 
+  // 2. ユーザーがその学校に所属しているか検証
+  const { data: membership } = await supabase
+    .from('profile_schools')
+    .select('id')
+    .eq('profile_id', profile.id)
+    .eq('school_id', schoolId)
+    .maybeSingle();
+
+  if (!membership) {
+    throw new Error('投稿先の学校に所属していません');
+  }
+
   let imageUrl = null;
 
-  // 2. 画像のアップロード (ある場合)
+  // 3. 画像のアップロード (ある場合)
   if (imageFile && imageFile.size > 0) {
-    const fileExt = imageFile.name.split('.').pop();
+    // 画像検証: 許可形式・サイズ・MIME
+    const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
+
+    const fileExt = (imageFile.name.split('.').pop() || '').toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
+      throw new Error('画像は JPEG, PNG, GIF, WebP 形式でアップロードしてください');
+    }
+    if (!ALLOWED_MIME_TYPES.includes(imageFile.type)) {
+      throw new Error('画像形式が不正です。JPEG, PNG, GIF, WebP を選択してください');
+    }
+    if (imageFile.size > MAX_SIZE_BYTES) {
+      throw new Error('画像は5MB以下にしてください');
+    }
+
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = `${fileName}`;
 
@@ -54,7 +81,7 @@ export async function createPost(formData: FormData) {
 
     if (uploadError) {
       console.error('Image upload error:', uploadError);
-      throw new Error('Failed to upload image');
+      throw new Error('画像のアップロードに失敗しました');
     }
 
     // 公開URLの取得
@@ -65,7 +92,7 @@ export async function createPost(formData: FormData) {
     imageUrl = publicUrl;
   }
 
-  // 3. 投稿データの保存（contentは必須のため画像のみの場合はプレースホルダー）
+  // 4. 投稿データの保存（contentは必須のため画像のみの場合はプレースホルダー）
   const postContent = content?.trim() || (imageUrl ? '(画像)' : '(投稿)');
   const boardTypeValue = ['all', 'classmates', 'club'].includes(boardType) ? boardType : 'all';
 
